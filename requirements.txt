@@ -1,0 +1,6 @@
+lxml
+requests
+yagmail==0.11.220
+xlrd==1.2.0
+PyYAML==5.1.2
+xlwt

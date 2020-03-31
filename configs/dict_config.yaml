@@ -1,0 +1,83 @@
+#dictionary etnries for assays (naming conversions)
+assay:
+    # expected values: "rna_seq", "scrna_seq", "atac_seq", "chip_seq", "scatac_seq", "medip_seq", "mint_chip", "wgbs",
+    # "snatac_seq", "snmc_seq", "cytof", "epic"
+    rnaseq: rnaseq
+    rna-seq: rnaseq
+    scrnaseq: scrnaseq
+    scrna-seq: scrnaseq
+    atacseq: atacseq
+    atac-seq: atacseq
+    scatacseq: scatacseq
+    scatac-seq: scatacseq
+    cytof: CyTOF
+    methylation: methylome
+    epic: methylome
+    methylome: methylome
+    "methylation_epic": methylome
+
+assay_sub_aliquot_postfix:
+    scrnaseq: _1
+    scatacseq: _2
+    rnaseq: _3
+    atacseq: _4
+    methylome: _5
+    cytof: _6
+
+exposure:
+    hiv: HIV
+    mrsa: MRSA
+    mssa: MSSA
+    tnt: TNT
+    rad: RAD
+    tbi: TBI
+    rdx: RDX
+    petn: PETN
+    tde: TDE
+    denv: DENV
+    bsl: BSL
+    anth: ANTH
+    mal: MAL
+    oph: OPH
+    gamma: GAMMA
+    co60: CO60
+    xray: XRAY
+    cs137: CS137
+    lasv: LASV
+    mpfl: MPFL
+    mpdc: MPDC
+    empta: EMPTA
+    2dc: 2DC
+    zika: ZIKA
+    wnile: WNILE
+    sarin: SARIN
+    vx: VX
+    soman: SOMAN
+    hd: HD
+    fent: FENT
+    ebola: EBOLA
+
+center:
+    hi: HI
+    du: DU
+    pfm: PfM
+    ba: BA
+    as: AS
+    is: IS
+    sa: SA
+    cu: CU
+    na: NA
+    gs: GS
+    wvu: WVU
+
+specimen_prep:
+    pbmc: PBMC
+    plasma: Plasma
+    paxgenes: PaxGenes
+
+inquiry_file_structure:
+    "1": exposure
+    "2": center
+    "3": specimen_prep
+    "4": assay
+    "5": sub-aliquot

@@ -1,0 +1,45 @@
+Datasource:
+    locations:
+        -
+            path: https://users.hpc.mssm.edu/~wangy33/10X_Single_Cell_RNA/TD01119_DARPA/
+            web_location: True
+            xpath: "//li/a/@href"
+            report_error_on_disqualification: True
+            search_method:
+                exclude_folders:
+                    - 046_ATACseq_AS10-16739_2/
+        -
+            path: https://users.hpc.mssm.edu/~wangy33/10X_Single_Cell_RNA/TD01119_DARPA/fastqs/130_ATACseq_AS09_03003_2/
+            web_location: True
+            xpath: "//li/a/@href"
+            search_method:
+                search_by: file_name #possible options: file_name and folder_name
+                file_ext: # must include dot (.) in-front of an extension
+                    - .fastq.gz
+                    - .gz
+
+    search_method_default: # search_rawdata_summary
+        search_by: folder_name #possible options: file_name and folder_name
+        search_deep_level_max: 0 # 0: root folder, 1:first sub-folder, etc.
+
+        # exclude the following sub-folders from the search
+        # for web locations folder names should end with "/"
+        exclude_folders:
+            - fastqs/
+        file_ext: # must include dot (.) in-front of an extension
+
+        # if soft match is set and no exact match was found,
+        # "find" character will be replaced with "replace" character in inquiry and source values
+        # and comparision will be repeated
+        soft_comparision:
+            - {find: "_", replace: "~"}
+            - {find: "-", replace: "~"}
+            - {find: "BMI", replace: "BM1"}
+
+        # if aliquot_match set to true, additional match by aliquot id will be performed if sub-aliquot match fails
+        aliquot_match: False
+
+Destination:
+    location:
+        path_template: "{project_path}/{study_path}/{target_subfolder}" #/{sub_aliquot_id}
+        project_path: D:\MounSinai\Darpa\Programming\submission\data_examples\Bulk_Drive\ECHO

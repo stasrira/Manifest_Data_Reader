@@ -1,0 +1,42 @@
+Version: 1.00
+
+Location:
+    # location of a directory with inquiries
+    inquiries: D:\MounSinai\Darpa\Programming\DownloadRequestCreator\inquiries
+    # path to the folder where newly created download request files are located
+    output_requests: D:\MounSinai\Darpa\Programming\DownloadRequestCreator\outcome_requests
+    # path to the folder where application level log files are located (one per application run)
+    app_logs: D:\MounSinai\Darpa\Programming\DownloadRequestCreator\logs
+    # path to the folder where dynamically created inquiry files for disqualified aliquots will be saved
+    inquiries_disqualified_path: reprocess
+    # path to the folder where inquiry level log files are located (one log file per inquiry)
+    inquiry_logs_relative_path: logs
+    # path to the folder where processed inquiry files will be stored
+    inquiries_processed_relative_path: processed
+    # path to Data Downloader tool. It will be executed by the app, if "Execute/run_data_downloader" is set to True
+    data_downloader_path: notepad.exe
+
+Logging:
+    #main log - log created by the main application
+    #inquiry log - log created for each processed inquiry
+
+    #defines log levels to be used for "main" and "file" logs. Usual values are INFO and DEBUG
+    main_log_level: INFO
+    inquiry_log_level: INFO
+
+Email:
+    #default settings for sending emails
+    smtp_server: smtp.mssm.edu
+    smtp_server_port: 25
+    default_from_email: stasrirak.ms@gmail.com
+    send_to_emails: stasrirak.ms@gmail.com, stasrira@yahoo.com
+    send_emails: True # expected values: True, False
+
+Execute:
+    # if set to true, data downloader file (Location/data_downloader_path) will be executed upon completion
+    # of processing inquiries
+    run_data_downloader: True
+
+Validate:
+    # if set to True, provided inquiry values will be validated against corresponded entries in the dict_config.yaml
+    inquiry_values_vs_dictionary: True
