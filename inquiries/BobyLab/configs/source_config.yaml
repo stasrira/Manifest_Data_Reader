@@ -29,7 +29,7 @@ Datasource:
         file_ext: # must include dot (.) in-front of an extension
 
         # if soft match is set and no exact match was found,
-        # "find" character will be replaced with "replace" character in inquiry and source values
+        # "find" character will be replaced with "replace" character in inquiry and qualif_dir values
         # and comparision will be repeated
         soft_comparision:
             - {find: "_", replace: "~"}

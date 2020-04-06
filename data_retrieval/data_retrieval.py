@@ -30,7 +30,7 @@ class DataRetrieval:
         return dirs, disqualify
 
     def get_data_by_file_name(self, data_loc, search_deep_level, exclude_dirs, ext_match):
-        # it retrieves all files potentially qualifying to be a source
+        # it retrieves all files potentially qualifying to be a qualif_dir
         disqualify =None
         files = []
         if Path(data_loc).exists():

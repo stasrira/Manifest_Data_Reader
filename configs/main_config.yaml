@@ -1,20 +1,27 @@
 Version: 1.00
 
 Location:
-    # location of a directory with inquiries
-    inquiries: D:\MounSinai\Darpa\Programming\DownloadRequestCreator\inquiries
-    # path to the folder where newly created download request files are located
-    output_requests: D:\MounSinai\Darpa\Programming\DownloadRequestCreator\outcome_requests
+    # list of qualif_dirs to be searched for sample manifest files
+    sources:
+        -
+            path: D:\MounSinai\Darpa\Programming\Manifest_Data_Reader\datasource_examples\J_Drive\ECHO\SampleInfo\HIV
+        -
+            path: D:\MounSinai\Darpa\Programming\Manifest_Data_Reader\datasource_examples\J_Drive\ECHO\SampleInfo\HLTH
+            Manifest:
+                folder_name: SampleManifests1
+                config_file_name: manifest_config1.yaml
+        -
+            path: D:\MounSinai\Darpa\Programming\Manifest_Data_Reader\datasource_examples\J_Drive\ECHO
+
     # path to the folder where application level log files are located (one per application run)
-    app_logs: D:\MounSinai\Darpa\Programming\DownloadRequestCreator\logs
-    # path to the folder where dynamically created inquiry files for disqualified aliquots will be saved
-    inquiries_disqualified_path: reprocess
-    # path to the folder where inquiry level log files are located (one log file per inquiry)
-    inquiry_logs_relative_path: logs
-    # path to the folder where processed inquiry files will be stored
-    inquiries_processed_relative_path: processed
-    # path to Data Downloader tool. It will be executed by the app, if "Execute/run_data_downloader" is set to True
-    data_downloader_path: notepad.exe
+    app_logs: D:\MounSinai\Darpa\Programming\Manifest_Data_Reader\logs
+
+Manifest:
+    folder_name: SampleManifests
+    config_file_name: manifest_config.yaml
+    # TODO: add validation requirements for a manifest config file
+    config_validation:
+
 
 Logging:
     #main log - log created by the main application
@@ -22,7 +29,7 @@ Logging:
 
     #defines log levels to be used for "main" and "file" logs. Usual values are INFO and DEBUG
     main_log_level: INFO
-    inquiry_log_level: INFO
+    # inquiry_log_level: INFO
 
 Email:
     #default settings for sending emails
@@ -32,11 +39,27 @@ Email:
     send_to_emails: stasrirak.ms@gmail.com, stasrira@yahoo.com
     send_emails: True # expected values: True, False
 
-Execute:
+# Execute:
     # if set to true, data downloader file (Location/data_downloader_path) will be executed upon completion
     # of processing inquiries
-    run_data_downloader: True
+    # run_data_downloader: True
 
 Validate:
     # if set to True, provided inquiry values will be validated against corresponded entries in the dict_config.yaml
-    inquiry_values_vs_dictionary: True
+    # inquiry_values_vs_dictionary: True
+
+Database:
+    connection:
+        #dev conn string: Driver={SQL Server};Server=localhost\sqlexpress;Database=dw_motrpac;User=mt_internal_user;Password=se@lf0n1nt3rn@l
+        #prod conn string: Driver={ODBC Driver 17 for SQL Server};Server=10.160.20.65\SSQL_2016;Database=dw_motrpac;UID=mt_internal_user;PWD=se@lf0n1nt3rn@l
+        #    #DB connection string
+        mdb_conn_str: Driver={ODBC Driver 17 for SQL Server};Server=localhost\sqlexpress;Database=dw_motrpac;UID=mt_internal_user;PWD=se@lf0n1nt3rn@l # Driver={SQL Server};Server=localhost\sqlexpress;Database=dw_motrpac;User=mt_internal_user;Password=se@lf0n1nt3rn@l
+
+    procedure:
+        # name of the stored proc to be used to load samples to DB
+        load_manifest_record: exec usp_add_aliquot_manifest_data @aliquot_id = '{aliquot_id}',  @sample_id ='{sample_id}', @study_id = {study_id}, @manifest_data ='{@manifest_data}', @source_name='{source_name}', @output_status_dataset = 1
+
+    manifest:
+        expected_aliquot_id_name: aliquot_id
+        expected_sample_id_name: sample_id
+

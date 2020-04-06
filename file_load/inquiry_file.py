@@ -1,7 +1,5 @@
 from pathlib import Path
 import os
-import stat
-import traceback
 import time
 import xlrd
 from utils import global_const as gc
@@ -10,7 +8,7 @@ from utils import common2 as cm2
 from utils import setup_logger_common
 from utils import ConfigData
 from file_load import File  # , MetaFileExcel
-from file_load.file_error import InquiryError
+from app_error import ManifestLocationError
 from data_retrieval import DataSource
 import xlwt
 
@@ -30,7 +28,7 @@ class Inquiry(File):
         else:
             self.conf_main = ConfigData(cfg_path)
 
-        self.error = InquiryError(self)
+        self.error = ManifestLocationError(self)
 
         self.log_handler = None
         self.logger = self.setup_logger(self.wrkdir, self.filename)
@@ -280,7 +278,7 @@ class Inquiry(File):
                     item_details = {
                         'sub-aliquot': sub_al,
                         'study': inq_study_path,
-                        'source': src_item,
+                        'qualif_dir': src_item,
                         'match_details': match_details,
                         'obj_type': ('dir' if src_item['search_by'] == 'folder_name'
                                         else 'file' if src_item['search_by'] == 'file_name'
@@ -289,7 +287,7 @@ class Inquiry(File):
                     self.inq_match_arr.append(item_details)
 
             if not match:
-                self.disqualify_inquiry_item(sub_al, 'No match found in the data source.', inq_line)
+                self.disqualify_inquiry_item(sub_al, 'No match found in the data qualif_dir.', inq_line)
 
     def is_item_found_soft_match(self, srch_item, srch_in_str, soft_match_arr, item_to_be_reported):
         out = False
@@ -374,12 +372,12 @@ class Inquiry(File):
             rf.write(headers + '\n')
 
             for item in self.inq_match_arr:
-                src_path = item['source']['path']
+                src_path = item['qualif_dir']['path']
 
                 #prepare values for the current inquiry row to put into the outcome file
                 project_path = self.conf_process_entity.get_value('Destination/location/project_path')
                 study_path = item['study']
-                target_subfolder = item['source']['target_subfolder']
+                target_subfolder = item['qualif_dir']['target_subfolder']
                 sub_aliquot = item['sub-aliquot']
                 obj_type = item['obj_type']
 

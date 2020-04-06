@@ -16,7 +16,7 @@ class DataSource(DataRetrieval):
         source_locations = self.conf_process_entity.get_value('Datasource/locations')
         self.source_locations = source_locations
 
-        # default search_by parameters from source config file
+        # default search_by parameters from qualif_dir config file
         search_by_default = self.conf_process_entity.get_value('Datasource/search_method_default/search_by')
         search_deep_level_defalult = self.conf_process_entity.get_value(
             'Datasource/search_method_default/search_deep_level_max')
@@ -29,9 +29,9 @@ class DataSource(DataRetrieval):
         ds_count = 0
         for loc_item in source_locations:
             ds_count +=1
-            self.logger.info('Start processing data source #{}, path: "{}"'.format(ds_count, loc_item['path']))
+            self.logger.info('Start processing data qualif_dir #{}, path: "{}"'.format(ds_count, loc_item['path']))
 
-            # check if a current source has specific search_by parameters, otherwise use default ones
+            # check if a current qualif_dir has specific search_by parameters, otherwise use default ones
             src_sm = loc_item['search_method'] if 'search_method' in loc_item.keys() else None
             search_by = src_sm['search_by'] \
                 if src_sm and 'search_by' in src_sm.keys() else search_by_default
@@ -61,7 +61,7 @@ class DataSource(DataRetrieval):
             if 'target_subfolder' in loc_item.keys():
                 target_subfolder = loc_item['target_subfolder'] if loc_item['target_subfolder'] else ''
 
-            self.logger.info('Current data source config details: '
+            self.logger.info('Current data qualif_dir config details: '
                              'web_location: "{}", '
                              'search_by: "{}", '
                              'search_deep_level_max: "{}", '
@@ -81,7 +81,7 @@ class DataSource(DataRetrieval):
                                        target_subfolder,
                                        xpath))
 
-            # start processing current source
+            # start processing current qualif_dir
             items = []
             disqualify = None
             if search_by == 'folder_name':
@@ -96,14 +96,14 @@ class DataSource(DataRetrieval):
                     items, disqualify = self.get_web_data(ds_path, xpath, exclude_dirs, ext_match)
             else:
                 _str = 'Unexpected "search_by" configuration parameter "{}" was provided.'.format(search_by)
-                _str2 = 'Skipping processing of the current source "{}"'.format(ds_path)
+                _str2 = 'Skipping processing of the current qualif_dir "{}"'.format(ds_path)
                 self.logger.warning('{} {}'.format(_str, _str2))
                 # self.disqualify_source(loc_item['path'], _str, error_on_disqualification)
                 disqualify = (loc_item['path'], _str)
                 # continue
 
             if disqualify:
-                # if disqualification was reported for current source location, disqualify it and skip to next location
+                # if disqualification was reported for current qualif_dir location, disqualify it and skip to next location
                 self.disqualify_source(disqualify[0], disqualify[1], error_on_disqualification)
                 continue
 
@@ -117,11 +117,11 @@ class DataSource(DataRetrieval):
                                     'search_by': search_by}
                     self.source_content_arr.append(item_details)
             else:
-                self.logger.warning('No available files/folders were found in the current source. '
-                                    'Configuration settings of the source might need to be reviewed.')
+                self.logger.warning('No available files/folders were found in the current qualif_dir. '
+                                    'Configuration settings of the qualif_dir might need to be reviewed.')
 
-            self.logger.info('Processing data source #{} was completed. '
-                             'Total number of files/folder available in the source = {}.'
+            self.logger.info('Processing data qualif_dir #{} was completed. '
+                             'Total number of files/folder available in the qualif_dir = {}.'
                              .format(ds_count, len(items) if items else 0))
 
     def disqualify_source(self, source_path, reason, error_on_disqualification = None):
@@ -131,9 +131,9 @@ class DataSource(DataRetrieval):
         if not source_path in self.disqualified_data_sources.keys():
             self.disqualified_data_sources[source_path] = []
         self.disqualified_data_sources[source_path].append(reason)
-        _str = 'Data source "{}" was disqualified with the following reason "{}".'.format(source_path, reason)
+        _str = 'Data qualif_dir "{}" was disqualified with the following reason "{}".'.format(source_path, reason)
         self.logger.warning(_str)
 
         if error_on_disqualification:
-            # if source requires to report an error on disqualification
+            # if qualif_dir requires to report an error on disqualification
             self.error.add_error(_str)

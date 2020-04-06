@@ -8,7 +8,8 @@ from utils import setup_logger_common, deactivate_logger_common, common as cm
 from utils import ConfigData
 from utils import global_const as gc
 from utils import send_email as email
-from file_load import Inquiry
+# from file_load import Inquiry
+from data_retrieval import ManifestLocation
 
 # if executed by itself, do the following
 if __name__ == '__main__':
@@ -22,37 +23,16 @@ if __name__ == '__main__':
 
     # get path configuration values
     logging_level = m_cfg.get_value('Logging/main_log_level')
-    # path to the folder where all new inquiry files will be posted
-    inquiries_loc = m_cfg.get_value('Location/inquiries')
-
-    gc.DISQUALIFIED_INQUIRIES = m_cfg.get_value('Location/inquiries_disqualified')
     # get path configuration values and save them to global_const module
     # path to the folder where all application level log files will be stored (one file per run)
     gc.APP_LOG_DIR = m_cfg.get_value('Location/app_logs')
-    # path to the folder where all log files for processing inquiry files will be stored
-    # (one file per inquiry)
-    gc.INQUIRY_LOG_DIR = m_cfg.get_value('Location/inquiry_logs_relative_path')
-    # path to the folder where all processed (and renamed) inquiries will be stored
-    gc.INQUIRY_PROCESSED_DIR = m_cfg.get_value('Location/inquiries_processed_relative_path')
-    # path to the folder where created submission packages will be located. One package sub_folder per inquiry.
-    gc.OUTPUT_REQUESTS_DIR = m_cfg.get_value('Location/output_requests')
-    # path to dir with dynamically created inquiry files for disqualified aliquots
-    gc.DISQUALIFIED_INQUIRIES =  m_cfg.get_value('Location/inquiries_disqualified_path')
 
     log_folder_name = gc.APP_LOG_DIR  # gc.LOG_FOLDER_NAME
-
-    # this variable define if Data Downloader app will be executed at the end of processing inquiries
-    run_data_download = m_cfg.get_value('Execute/run_data_downloader')
-    # path to the Data Downloader tool
-    gc.DATA_DOWNLOADER_PATH = m_cfg.get_value('Location/data_downloader_path')
 
     prj_wrkdir = os.path.dirname(os.path.abspath(__file__))
 
     email_msgs = []
     # email_attchms = []
-
-    # inquiries_loc = 'E:/MounSinai/MoTrPac_API/ProgrammaticConnectivity/MountSinai_metadata_file_loader/DataFiles'
-    inquiries_path = Path(inquiries_loc)
 
     # get current location of the script and create Log folder
     # if a relative path provided, convert it to the absolute address based on the application working dir
@@ -66,9 +46,58 @@ if __name__ == '__main__':
     lg = setup_logger_common(common_logger_name, logging_level, logdir, lg_filename)  # logging_level
     mlog = lg['logger']
 
-    mlog.info('Start processing download inquiries in "{}"'.format(inquiries_path))
+    mlog.info('Start processing Sample Manifests')
+
+    gc.DB_CONFIG = m_cfg.get_value('Database')
 
     try:
+
+        locations_list = m_cfg.get_value('Location/sources')
+        manif_dir_name_default = m_cfg.get_value('Manifest/folder_name')
+        manif_cfg_file_name_default = m_cfg.get_value('Manifest/config_file_name')
+
+        manifest_locations = {}
+
+        if locations_list:
+            for location in locations_list:
+                print (location)
+                manif_dir_name_loc = None
+                manif_cfg_file_name_loc = None
+                # check if Manifest section was provided for a current location
+                if isinstance(location,dict) and 'Manifest' in location.keys():
+                    manifest_loc = location['Manifest']
+                    # get folder name assigned to this location, if provided
+                    if isinstance(manifest_loc, dict) and 'folder_name' in manifest_loc.keys():
+                        manif_dir_name_loc = manifest_loc['folder_name']
+                    # get config file name assigned to this location, if provided
+                    if isinstance(manifest_loc, dict) and 'config_file_name' in manifest_loc.keys():
+                        manif_cfg_file_name_loc = manifest_loc['config_file_name']
+
+                qualif_dirs = cm.get_file_system_items_global(
+                    location['path'],
+                    'dir',
+                    manif_dir_name_loc if manif_dir_name_loc else manif_dir_name_default)
+
+                for qualif_dir in qualif_dirs:
+                    cfg_file_name = manif_cfg_file_name_loc if manif_cfg_file_name_loc else manif_cfg_file_name_default
+                    manifest_locations[qualif_dir] = {
+                        'path': qualif_dir,
+                        'config': cfg_file_name
+                    }
+
+                print (qualif_dirs)
+            print (manifest_locations)
+
+            manifest_loc_objs = []
+            for manifest_loc in manifest_locations:
+                mlog.info('Selected for processing manifiest directory: "{}"'.format(manifest_loc))
+                manifest_loc_obj = ManifestLocation(manifest_locations[manifest_loc], mlog)
+                manifest_loc_objs.append(manifest_loc_obj)
+                manifest_loc_obj.process_manifests()
+            print ('')
+        else:
+            # TODO: add aborting logic here
+            mlog.error("No 'Location/sources' were provided in the main config file. Aborting execution.")
 
         (root, source_inq_dirs, _) = next(walk(inquiries_path))
 
@@ -79,7 +108,8 @@ if __name__ == '__main__':
 
         for inq_dir in source_inq_dirs:
             source_inquiry_path = Path(root) / inq_dir
-            mlog.info('Selected for processing inquiry source: "{}", full path: {}'.format(inq_dir, source_inquiry_path))
+            mlog.info('Selected for processing inquiry qualif_dir: "{}", full path: {}'.format(inq_dir, source_inquiry_path))
+
 
             (_, _, inq_files) = next(walk(source_inquiry_path))
             inquiries = [fl for fl in inq_files if fl.endswith(('xlsx', 'xls'))]
@@ -139,7 +169,7 @@ if __name__ == '__main__':
                     deactivate_logger_common(inq_obj.logger, inq_obj.log_handler)
 
                     processed_dir = inq_obj.processed_folder  # 'Processed'
-                    # if Processed folder does not exist in the Inquiry source sub-folder, it will be created
+                    # if Processed folder does not exist in the Inquiry qualif_dir sub-folder, it will be created
                     os.makedirs(processed_dir, exist_ok=True)
 
                     inq_processed_name = ts + '_' + fl_status + '_' + str(inq_file).replace(' ', '_').replace('__','_')
@@ -158,7 +188,7 @@ if __name__ == '__main__':
                          '<br/> <b>Errors summary:</b><br/>{}'
                          '<br/> <i>Log file location: <br/>{}</i>'
                          '<br/> Created Download Request file locatoin:<br/>{}'
-                         '<br/> <b>Data sources used for this inquiry:</b><br/>{}'
+                         '<br/> <b>Data qualif_dirs used for this inquiry:</b><br/>{}'
                          '<br/> <font color="green"><b>Processed Aliquots:</b></font><br/>{}'
                          '<br/> <b>Disqualified Aliquots</b> (if present, see the log file for more details):<br/>{}'
                          '<br/> A inquiry file for re-processing Disqualified Aliquots was saved in:<br/>{}'
@@ -192,7 +222,7 @@ if __name__ == '__main__':
                                                     else '</font> '
                                                 )
                                         )
-                                                + '{} ({})'.format(item['source']['name'], item['source']['path'])
+                                                + '{} ({})'.format(item['qualif_dir']['name'], item['qualif_dir']['path'])
                                         for item in inq_obj.inq_match_arr
                                                 ])
                                                             if inq_obj.inq_match_arr else 'None',

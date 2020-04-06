@@ -1,7 +1,7 @@
 from .entity_error import EntityErrors
 
 
-class InquiryError(EntityErrors):
+class ManifestLocationError(EntityErrors):
 
     def get_errors_to_str(self):
         err_lst = []

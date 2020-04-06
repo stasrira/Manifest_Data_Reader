@@ -2,7 +2,7 @@ Datasource:
 
     locations: # list of dictionaries; "path" element of dictionary is required
         -
-            # path to the source location
+            # path to the qualif_dir location
             path: D:\MounSinai\Darpa\Programming\DownloadRequestCreator\datasource_examples\hawaii_google_shared
             # if provided, sub-folder will be created between the study's destination path and the aliquot folder
             # containing downloaded files/folders, i.e. "fastqs" folder. See: Destination/location/path_template tag.
@@ -12,24 +12,24 @@ Datasource:
             report_error_on_disqualification:
             # search_method is an optional parameter under Datasource/locations section,
             # if not given, search_method_default will be used instead
-            # this section describes search parameters that will be applied to the current data source
+            # this section describes search parameters that will be applied to the current data qualif_dir
             # any of the values (or the whole section search_method) can be omitted
             search_method: # search_rawdata_summary
 
 
     # this is a default "search_method" section
-    # it will be used if a particular source' "search_method" section does not overwrite this
+    # it will be used if a particular qualif_dir' "search_method" section does not overwrite this
     search_method_default:
         search_by: file_name # expected values: file_name, folder_name
         search_deep_level_max: 2 # 0: root folder, 1:first sub-folder, etc.
         # exclude the following sub-folders from the search
         exclude_folders: # this is a list of string values
 
-        # list of file extensions that will be considered to be included to the source content
+        # list of file extensions that will be considered to be included to the qualif_dir content
         file_ext: # must include dot (.) in-front of an extension; this is a list of string values
             - .idat
         # if soft match is set and no exact match was found,
-        # "find" string will be replaced with "replace" string in inquiry and source values and comparision redone
+        # "find" string will be replaced with "replace" string in inquiry and qualif_dir values and comparision redone
         soft_comparision: # list of dictionaries of this structure {find: "_", replace: "~"}
             - {find: "_", replace: "~"}
             - {find: "-", replace: "~"}

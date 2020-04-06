@@ -1,0 +1,38 @@
+Database:
+  study_id: 7 # study id (from dw_studies table in DB) corresponding to the current manifest provider
+
+File:
+  header_row_num: 1
+  sheet_name: Sheet1
+
+Fields:
+  aliquot_id:
+    name: ['Barcode']
+    required: True
+  sample_id:
+    name: ['SID', 'Barcode']
+    required: True
+  creation_date:
+    name: ['Specimen Date']
+  volume:
+    name: ['Sample volume (mL)']
+  num_cells:
+    name: ['Number of cells (x10^6)']
+  species:
+    name: ['Species']
+  tissue:
+    name: ['Tissue']
+  specimen_prep:
+    name: ['Specimen prep']
+  ship_date:
+    name: ['Ship date']
+
+Exception_files:
+  -
+    name: "20190520 SHIP ECHO DARPA ISSMS_PBMC_SEALFON.xlsx" # name of the file with alternative settings
+    File: # alternative File section that will overwrite value of main File section for provided property values
+      header_row_num:
+      sheet_name: sheet1
+    Fields: # alternative Fields section that will overwrite value of main Field section for provided property values
+      sample_id:
+        name: ['barcode1']

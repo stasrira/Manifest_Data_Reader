@@ -2,7 +2,7 @@ import os
 # import time
 from pathlib import Path
 import logging
-from file_load.file_error import FileError
+from app_error import FileError
 # from utils import setup_logger_common
 # from utils import global_const as gc
 from utils import common as cm
@@ -18,7 +18,7 @@ class File:
     filename = None
     file_type = None  # 1:text, 2:excel
     file_delim = None  # ','
-    lines_arr = None  # []
+    lineList = None  # []
     __headers = None  # []
     error = None  # FileErrors class reference holding all errors associated with the current file
     sample_id_field_names = None  # []
@@ -32,7 +32,7 @@ class File:
         self.file_type = file_type
         self.file_delim = file_delim
         self.error = FileError(self)
-        self.lines_arr = []
+        self.lineList = []
         self.__headers = []
         self.log_handler = None
         self.header_row_num = 1  # default header row number
@@ -49,7 +49,7 @@ class File:
     def setup_logger(self, wrkdir, filename):
         pass
         '''
-        log_folder_name = gc.INQUIRY_LOG_DIR  # gc.LOG_FOLDER_NAME
+        log_folder_name = gc.REQ_LOG_DIR  # gc.LOG_FOLDER_NAME
 
         # if a relative path provided, convert it to the absolute address based on the application working dir
         if not os.path.isabs(log_folder_name):
@@ -65,17 +65,17 @@ class File:
         return lg['logger']
         '''
 
-    def get_file_content_1(self):
+    def get_file_content(self):
         if not self.logger:
             loc_log = logging.getLogger(StudyConfig.study_logger_name)
         else:
             loc_log = self.logger
 
-        if not self.lines_arr:
+        if not self.lineList:
             if cm.file_exists(self.filepath):
                 loc_log.debug('Loading file content of "{}"'.format(self.filepath))
                 with open(self.filepath, "r") as fl:
-                    self.lines_arr = [line.rstrip('\n') for line in fl]
+                    self.lineList = [line.rstrip('\n') for line in fl]
                     fl.close()
                     self.loaded = True
             else:
@@ -83,9 +83,9 @@ class File:
                     self.filepath)
                 self.error.add_error(_str)
                 loc_log.error(_str)
-                self.lines_arr = None
+                self.lineList = None
                 self.loaded = False
-        return self.lines_arr
+        return self.lineList
 
     def get_headers(self):
         if not self.__headers:
@@ -93,6 +93,8 @@ class File:
 
             if self.replace_blanks_in_header:
                 self.__headers = [hdr.strip().replace(' ', '_') for hdr in hdrs]
+            else:
+                self.__headers = hdrs
         return self.__headers
 
     def get_row_by_number(self, rownum):
