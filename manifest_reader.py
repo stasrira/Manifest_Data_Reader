@@ -90,14 +90,24 @@ if __name__ == '__main__':
 
             manifest_loc_objs = []
             for manifest_loc in manifest_locations:
-                mlog.info('Selected for processing manifiest directory: "{}"'.format(manifest_loc))
+                mlog.info('Selected for processing manifest directory: "{}"'.format(manifest_loc))
                 manifest_loc_obj = ManifestLocation(manifest_locations[manifest_loc], mlog)
                 manifest_loc_objs.append(manifest_loc_obj)
-                manifest_loc_obj.process_manifests()
-            print ('')
+                if not manifest_loc_obj.disqualified:
+                    manifest_loc_obj.process_manifests()
+                else:
+                    mlog.info('Current manifest directory was disqualifeid with the following reason: "{}"'
+                              .format(manifest_loc_obj.disqualified_reasons))
+            pass
         else:
             # TODO: add aborting logic here
             mlog.error("No 'Location/sources' were provided in the main config file. Aborting execution.")
+
+
+
+
+
+
 
         (root, source_inq_dirs, _) = next(walk(inquiries_path))
 

@@ -29,7 +29,11 @@ class DataRetrievalText(File):
                     elif i == self.header_row_num and exclude_header:
                         pass
                     else:
-                        cell_value = self.get_row_by_number_to_list(i)[col_number]
+                        row = self.get_row_by_number_to_list(i)
+                        if row:
+                            cell_value = row[col_number]
+                        else:
+                            cell_value = ''
                         col_values.append(cell_value)
             else:
                 col_values = None

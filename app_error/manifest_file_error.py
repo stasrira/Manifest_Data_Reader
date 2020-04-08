@@ -1,7 +1,7 @@
 from .entity_error import EntityErrors
 
 
-class ManifestLocationError(EntityErrors):
+class ManifestFileError(EntityErrors):
 
     def get_errors_to_str(self):
         err_lst = []
@@ -10,7 +10,7 @@ class ManifestLocationError(EntityErrors):
             err_lst.append({'error_desc': er.error_desc, 'error_number': er.error_number})
 
         error = {
-            'file': str(self.entity.location_path),
+            'file': str(self.entity.manifest_path),
             'errors': err_lst  # EntityErrors.get_errors(self)
         }
         return error

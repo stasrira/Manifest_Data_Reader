@@ -24,13 +24,27 @@ class MetadataDB:
         self.conn = None
 
     def open_connection(self):
-        self.conn = pyodbc.connect(self.s_conn, autocommit=True)
+        self.logger.info('Attempting to open connection to Metadata DB.')
+        try:
+            self.conn = pyodbc.connect(self.s_conn, autocommit=True)
+            self.logger.info('Successfully established the database connection.')
+        except Exception as ex:
+            # report unexpected error during openning DB connection
+            _str = 'Unexpected Error "{}" occurred during an attempt to open connecton to database ({})\n{} ' \
+                .format(ex, self.s_conn, traceback.format_exc())
+            self.logger.error(_str)
+            self.error.add_error(_str)
 
     def submit_row(self, row_dict, metadata_file_path):  # sample_id, row_json, dict_json, filepath):
 
         if not self.conn:
             # open connection if needed
             self.open_connection()
+
+        if not self.conn:
+            # connection failed to open
+            self.logger.error('Database connection cannot be established (see earlier log info for details).')
+            return None
 
         aliquot_id = row_dict[self.alid_name]
         sample_id = row_dict[self.sid_name]
@@ -47,7 +61,7 @@ class MetadataDB:
 
         # '{samlpe_update}'
 
-        self.logger.info('Calling SQL Procedure: {}'.format(str_proc))
+        self.logger.info('Attempting to execute the following SQL call: {}'.format(str_proc))
         # print ('procedure (str_proc) = {}'.format(str_proc))
 
         # TODO: if procedure execution does not fail but return back status saying "ERROR:", record an error for the row
@@ -61,13 +75,13 @@ class MetadataDB:
             results = []
             for row in rows:
                 results.append(dict(zip(columns, row)))
-            rs_out.append(results)
+            rs_out.extend(results)
             return rs_out
 
         except Exception as ex:
             # report an error if DB call has failed.
-            _str = 'Error "{}" occurred during submitting a row (sample_id = "{}") to database; ' \
-                   'used SQL script "{}". Here is the traceback: \n{} '.format(
+            _str = 'Error "{}" occurred during submitting a row (sample_id = "{}") to database ' \
+                   'using this SQL script "{}". Here is the traceback: \n{} '.format(
                     ex, sample_id, str_proc, traceback.format_exc())
             self.error.add_error(_str)
             self.logger.error(_str)
