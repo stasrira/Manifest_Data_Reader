@@ -19,8 +19,24 @@ Location:
 Manifest:
     folder_name: SampleManifests
     config_file_name: manifest_config.yaml
-    # TODO: add validation requirements for a manifest config file
-    config_validation:
+
+# TODO: add validation requirements for a manifest config file
+Validate:
+    # list of sections and fields that the application will validate in the config file
+    # if no definitions for listed fields found, the app will fail the config file validation
+    manifest_config_fields:
+        - Database:
+              - {name: study_id, required: True}
+        - Fields:
+            - {name: aliquot_id, required: True}
+            - {name: sample_id, required: True}
+            - {name: creation_date, required: False}
+            - {name: volume, required: False}
+            - {name: num_cells, required: False}
+            - {name: species, required: False}
+            - {name: tissue, required: False}
+            - {name: specimen_prep, required: False}
+            - {name: ship_date, required: False}
 
 
 Logging:
@@ -38,15 +54,6 @@ Email:
     default_from_email: stasrirak.ms@gmail.com
     send_to_emails: stasrirak.ms@gmail.com, stasrira@yahoo.com
     send_emails: True # expected values: True, False
-
-# Execute:
-    # if set to true, data downloader file (Location/data_downloader_path) will be executed upon completion
-    # of processing inquiries
-    # run_data_downloader: True
-
-Validate:
-    # if set to True, provided inquiry values will be validated against corresponded entries in the dict_config.yaml
-    # inquiry_values_vs_dictionary: True
 
 Database:
     connection:

@@ -91,7 +91,7 @@ if __name__ == '__main__':
             manifest_loc_objs = []
             for manifest_loc in manifest_locations:
                 mlog.info('Selected for processing manifest directory: "{}"'.format(manifest_loc))
-                manifest_loc_obj = ManifestLocation(manifest_locations[manifest_loc], mlog)
+                manifest_loc_obj = ManifestLocation(manifest_locations[manifest_loc], mlog, m_cfg)
                 manifest_loc_objs.append(manifest_loc_obj)
                 if not manifest_loc_obj.disqualified:
                     manifest_loc_obj.process_manifests()

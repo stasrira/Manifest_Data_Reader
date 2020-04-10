@@ -27,6 +27,7 @@ Fields:
   ship_date:
     name: ['Ship date']
 
+# TODO: implement logic for exception files that would not follow the main setting set above
 Exception_files:
   -
     name: "20190520 SHIP ECHO DARPA ISSMS_PBMC_SEALFON.xlsx" # name of the file with alternative settings
