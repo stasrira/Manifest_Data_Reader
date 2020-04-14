@@ -1,13 +1,6 @@
 # ========== config file names
 # main config file name
 CONFIG_FILE_MAIN = 'configs/main_config.yaml'
-# CONFIG_FILE_DICTIONARY = 'configs/dict_config.yaml'
-# CONFIG_FILE_SOURCE_NAME = 'configs/source_config.yaml'
-
-# PROJECT_NAME = 'ECHO'  # this key is stored in here instead of being passed from a inquiry.
-
-# qualif_dir level default name for the config file
-# DEFAULT_STUDY_CONFIG_FILE = 'source_config.yaml'
 
 # name for the each type of log
 MAIN_LOG_NAME = 'main_log'

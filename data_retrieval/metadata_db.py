@@ -50,7 +50,6 @@ class MetadataDB:
         sample_id = row_dict[self.sid_name]
         str_proc = self.procedure
 
-        # {aliquot_id}',  @sample_id ='{sample_id}', @study_id = {study_id}, @manifest_data ='{@manifest_data}', @source_name='{source_name}'
         # json.dumps(manifest_row_dics)
         # prepare stored proc string to be executed
         str_proc = str_proc.replace('{aliquot_id}', str(aliquot_id))  # '{aliquot_id}'

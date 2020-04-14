@@ -1,7 +1,6 @@
 from pathlib import Path
 import sys
 import os
-from os import walk
 import time
 import traceback
 from utils import setup_logger_common, deactivate_logger_common, common as cm
@@ -57,6 +56,7 @@ if __name__ == '__main__':
         manif_cfg_file_name_default = m_cfg.get_value('Manifest/config_file_name')
 
         manifest_locations = OrderedDict()
+        manifest_loc_objs = []
 
         if locations_list:
             for location in locations_list:
@@ -64,7 +64,7 @@ if __name__ == '__main__':
                 manif_dir_name_loc = None
                 manif_cfg_file_name_loc = None
                 # check if Manifest section was provided for a current location
-                if isinstance(location,dict) and 'Manifest' in location.keys():
+                if isinstance(location, dict) and 'Manifest' in location.keys():
                     manifest_loc = location['Manifest']
                     # get folder name assigned to this location, if provided
                     if isinstance(manifest_loc, dict) and 'folder_name' in manifest_loc.keys():
@@ -85,9 +85,10 @@ if __name__ == '__main__':
                         'config': cfg_file_name
                     }
                 # print (qualif_dirs)
-            #print (manifest_locations)
+            # print (manifest_locations)
 
-            manifest_loc_objs = []
+            # manifest_loc_objs = []
+            manifest_loc_obj = None
             for manifest_loc in manifest_locations:
                 try:
                     mlog.info('-->>Selected for processing manifest directory: "{}"'.format(manifest_loc))
@@ -109,7 +110,7 @@ if __name__ == '__main__':
                         for manifest_file in manifest_loc_obj.manifest_files:
                             if not manifest_file.error.exist():
                                 fl_status = 'OK'
-                                _str = 'Processing status: "{}". Manifest file: {}'\
+                                _str = 'Processing status: "{}". Manifest file: {}' \
                                     .format(fl_status, manifest_file.manifest_path)
                             else:
                                 fl_status = 'ERROR'
@@ -130,8 +131,9 @@ if __name__ == '__main__':
                     _str = 'Unexpected Error "{}" occurred during processing manifest location "{}" \n{} ' \
                         .format(ex, manifest_loc, traceback.format_exc())
                     mlog.critical(_str)
-                    manifest_loc_obj.disqualified = True
-                    manifest_loc_obj.disqualified_reasons.append(_str)
+                    if manifest_loc_obj:
+                        manifest_loc_obj.disqualified = True
+                        manifest_loc_obj.disqualified_reasons.append(_str)
         else:
             mlog.error("No 'Location/sources' were provided in the main config file.")
 
@@ -189,18 +191,18 @@ if __name__ == '__main__':
         if manifest_locations and manifest_loc_objs:
             # if not all locations were processed, collect them into not_processed_loc list
             if identified_loc > processed_loc:
-                for l in manifest_locations:
+                for lc in manifest_locations:
                     l_match = False
                     for lo in manifest_loc_objs:
-                        if l == lo.location_path:
+                        if lc == lo.location_path:
                             l_match = True
                             break
                     if not l_match:
-                        not_processed_loc.append(l)
+                        not_processed_loc.append(lc)
 
         email_body = ('Total of identified manifest locations: <b>{}</b>'.format(identified_loc)
                       + '<br/>Total of processed manifest locations: <font color = "green"><b>{}</b></font>'
-                        .format(processed_loc)
+                      .format(processed_loc)
                       + '<br/>Log file for the run: {}'.format(str(mlog.handlers[0].baseFilename))
                       + (
                           '<br/><br/><font color="red">Total of not processed locations: <b>{}</b>'
@@ -210,7 +212,7 @@ if __name__ == '__main__':
                           + '</font>'
                           if identified_loc > processed_loc else '')
                       + '<br/><br/>Number of processed manifest files (across all locations): <b>{}</b>'
-                        .format(fls_processed_cnt)
+                      .format(fls_processed_cnt)
                       + '<br/><br/>Processed Manifest\'s details:'
                       + '<br/><br/>'
                       + '<br/><br/>'.join(email_msgs)
@@ -224,7 +226,7 @@ if __name__ == '__main__':
         try:
             if m_cfg.get_value('Email/send_emails'):
                 email.send_yagmail(
-                    emails_to= email_to,
+                    emails_to=email_to,
                     subject=email_subject,
                     message=email_body
                     # commented adding attachements, since some log files go over 25GB limit and fail email sending
@@ -246,4 +248,5 @@ if __name__ == '__main__':
         mlog.critical(_str)
         raise
 
+    deactivate_logger_common(mlog, mlog.handlers[0])
     sys.exit()

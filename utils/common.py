@@ -13,12 +13,14 @@ def file_exists(fn):
     except IOError:
         return 0
 
+
 def is_excel(file_path):
     ext = Path(file_path).suffix
     if 'xls' in ext:
         return True
     else:
         return False
+
 
 def identify_delimeter_by_file_extension(file_path):
     ext = Path(file_path).suffix
@@ -33,12 +35,14 @@ def identify_delimeter_by_file_extension(file_path):
     else:
         out_value = ','
 
-    return  out_value
+    return out_value
 
-def start_external_process_async (exec_path):
+
+def start_external_process_async(exec_path):
     from subprocess import Popen
     process = Popen(exec_path, shell=True)
     return process
+
 
 def check_external_process(process):
     pr_out = process.poll()
@@ -50,6 +54,7 @@ def check_external_process(process):
         message = pr_out
     out = {'status': status, 'message': message}
     return out
+
 
 def get_file_system_items_old(dir_cur, search_deep_level, exclude_dirs=None, item_type='dir', ext_match=None):
     import glob
@@ -65,7 +70,7 @@ def get_file_system_items_old(dir_cur, search_deep_level, exclude_dirs=None, ite
     items = []
     cur_lev = 'SampleManifests'
     while deep_cnt <= search_deep_level:
-        cur_lev = '/*' + cur_lev # '/*'
+        cur_lev = '/*' + cur_lev  # '/*'
         items_cur = glob.glob(str(Path(str(dir_cur) + cur_lev)))
 
         if item_type == 'dir':
@@ -76,7 +81,7 @@ def get_file_system_items_old(dir_cur, search_deep_level, exclude_dirs=None, ite
             for ext in ext_match:
                 items_found = [fn for fn in items_cur if not Path.is_dir(Path(fn))
                                and (len(ext_match) == 0 or fn.endswith(ext))]
-                                # and (len(ext_match) == 0 or os.path.splitext(fn)[1] in ext_match)]
+                # and (len(ext_match) == 0 or os.path.splitext(fn)[1] in ext_match)]
                 if items_found:
                     items_clean.extend(items_found)
         else:
@@ -85,20 +90,20 @@ def get_file_system_items_old(dir_cur, search_deep_level, exclude_dirs=None, ite
         deep_cnt += 1
     return items
 
+
 def get_file_system_items_global(dir_cur, item_type='dir', match_pattern=None):
     import glob
-    import os
 
     # base_loc = self.data_loc / dir_cur
     if match_pattern is None:
         match_pattern = '*'
     items = []
 
-    search_pattern = str(Path(str(dir_cur) + '/**/' + match_pattern)) # '/**/SampleManifests'
-    items_cur = glob.glob(search_pattern, recursive = True)
+    search_pattern = str(Path(str(dir_cur) + '/**/' + match_pattern))  # '/**/SampleManifests'
+    items_cur = glob.glob(search_pattern, recursive=True)
 
     if item_type == 'dir':
-        items_clean = [fn for fn in items_cur if Path.is_dir(Path(fn)) ]
+        items_clean = [fn for fn in items_cur if Path.is_dir(Path(fn))]
     elif item_type == 'file':
         items_clean = [fn for fn in items_cur if not Path.is_dir(Path(fn))]
 
@@ -108,6 +113,7 @@ def get_file_system_items_global(dir_cur, item_type='dir', match_pattern=None):
 
     return items
 
+
 def prepare_status_email(manifest_locations):
     msg_out = []
     nbsp = 3
@@ -115,9 +121,9 @@ def prepare_status_email(manifest_locations):
     for mnf_loc in manifest_locations:
         email_msg = ''
         mnf_loc_cnt += 1
-        email_msg = '<b>Manifest location (#{}):</b><br/>{}'\
+        email_msg = '<b>Manifest location (#{}):</b><br/>{}' \
             .format(mnf_loc_cnt, '&nbsp;' * nbsp + str(mnf_loc.location_path))
-        email_msg = email_msg + '<br/>{}Disqualified:{} {}{}</font>'.\
+        email_msg = email_msg + '<br/>{}Disqualified:{} {}{}</font>'. \
             format(
             '<b>' if mnf_loc.disqualified else '',
             '</b>' if mnf_loc.disqualified else '',
@@ -136,14 +142,14 @@ def prepare_status_email(manifest_locations):
                 file_cnt += 1
                 email_msg = email_msg + '<br/>{}- <i><b>File (#{}):</b> {}</i>'.format(
                     '&nbsp;' * nbsp, file_cnt, str(mnf_file.manifest_path))
-                email_msg = email_msg + '<br/>{}Processed: {}{}</font>'\
+                email_msg = email_msg + '<br/>{}Processed: {}{}</font>' \
                     .format('&nbsp;' * nbsp,
                             '<font color="green">' if mnf_file.processed else '<font color="red">',
                             str(mnf_file.processed))
                 if mnf_file.submitted_manifest_rows:
                     email_msg = email_msg + '<br/>{}Processed rows summary:'.format('&nbsp;' * nbsp)
                 for row_status in mnf_file.submitted_manifest_rows:
-                    email_msg = email_msg + '<br/>{}- Status: <font color = "{}">{}</font>: {} rows '\
+                    email_msg = email_msg + '<br/>{}- Status: <font color = "{}">{}</font>: {} rows ' \
                         .format('&nbsp;' * nbsp,
                                 'green' if row_status == 'OK' else 'red',
                                 row_status,
@@ -151,22 +157,19 @@ def prepare_status_email(manifest_locations):
                     if not row_status == 'OK':
                         email_msg = email_msg + '<br/>{}Details:'.format('&nbsp;' * nbsp)
                         for item in mnf_file.submitted_manifest_rows[row_status]:
-                            email_msg = email_msg + '<br/>{}{} --> {}'\
+                            email_msg = email_msg + '<br/>{}{} --> {}' \
                                 .format('&nbsp;' * nbsp, str(item[0]), str(item[1]['description']))
                             # print(str(item[0]))
                             # print(str(item[1]['description']))
-                            # .format(['<br/>' + str(item[0]) + ' --> ' + str(item[1]) for item in mnf_file.submitted_manifest_rows[row_status]])
                     # print(row_status)
                     # print(mnf_file.submitted_manifest_rows[row_status])
                 if mnf_file.error.exist():
-                    # email_msg = email_msg + '<br/>{}<font color = "red">Errors reported:</font> </br>{}'.format('&nbsp;' * nbsp, str(mnf_file.error.get_errors_to_str()['errors']))
                     email_msg = email_msg + '<br/>{}<font color = "red">Errors reported:</font>'.format('&nbsp;' * nbsp)
                     for err in mnf_file.error.get_errors_to_str()['errors']:
                         email_msg = email_msg + '<br/>{}->{}'.format('&nbsp;' * nbsp, err)
         else:
             email_msg = email_msg + '<br/><font color="red">No manifest files processed in this location.</font>'
 
-        msg_out.append((email_msg))
+        msg_out.append(email_msg)
 
     return msg_out
-

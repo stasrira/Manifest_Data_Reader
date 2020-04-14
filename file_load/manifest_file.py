@@ -48,6 +48,7 @@ class ManifestFile:
             # If the manifest file was loaded proceed here
             # loop through manifest fields listed in the config file
             for mf in cfg_manifest_fields:
+                match = False
                 # loop through list of possible field names (in the file) listed for the current manifest field
                 for fn in cfg_manifest_fields[mf]['name']:
                     cnt = 0
@@ -122,11 +123,11 @@ class ManifestFile:
             self.processed = True
 
     # function goes through all found columns and creates dictionary or json for each row of a manifest
-    def prepare_manifest_rows(self, jsonFormat = None):
-        if not jsonFormat:
-            jsonFormat = False
+    def prepare_manifest_rows(self, json_format = None):
+        if not json_format:
+            json_format = False
         else:
-            jsonFormat = True
+            json_format = True
 
         manifest_rows = []
         if self.manifest_columns:
@@ -157,7 +158,7 @@ class ManifestFile:
                 if some_value_present:
                     # if some values were found in the row, add it to the final list of rows
                     # append created dictionary of a row to a dictionary of rows
-                    if jsonFormat:
+                    if json_format:
                         manifest_rows.append(json.dumps(manifest_row_dics))
                     else:
                         manifest_rows.append(manifest_row_dics)
