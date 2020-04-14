@@ -59,7 +59,7 @@ Database:
         #dev conn string: Driver={SQL Server};Server=localhost\sqlexpress;Database=dw_motrpac;User=mt_internal_user;Password=se@lf0n1nt3rn@lc
         #prod conn string: Driver={ODBC Driver 17 for SQL Server};Server=10.160.20.65\SSQL_2016;Database=dw_motrpac;UID=mt_internal_user;PWD=se@lf0n1nt3rn@lc
         #    #DB connection string
-        mdb_conn_str: Driver={ODBC Driver 17 for SQL Server};Server=localhost\sqlexpress;Database=dw_motrpac;UID=mt_internal_user;PWD=se@lf0n1nt3rn@lc # Driver={SQL Server};Server=localhost\sqlexpress;Database=dw_motrpac;User=mt_internal_user;Password=se@lf0n1nt3rn@lc
+        mdb_conn_str: Driver={ODBC Driver 17 for SQL Server};Server=localhost\sqlexpress;Database=dw_motrpac;UID=mt_internal_user;PWD=se@lf0n1nt3rn@l # Driver={SQL Server};Server=localhost\sqlexpress;Database=dw_motrpac;User=mt_internal_user;Password=se@lf0n1nt3rn@lc
 
     procedure:
         # name of the stored proc to be used to load samples to DB

@@ -4,19 +4,31 @@ from file_load import DataRetrievalExcel
 from app_error import ManifestFileError
 import json
 from data_retrieval import MetadataDB
+import os
 
 
 class ManifestFile:
 
     def __init__(self, manifest_path, manifest_location_obj):
-        self.manifest_path = manifest_path
+        self.manifest_path = manifest_path  # file path
+        self.file_name = os.path.basename(manifest_path)  #file name
         self.manifest_location_obj = manifest_location_obj
         self.processed = False
 
-        self.conf_manifest = self.manifest_location_obj.conf_manifest
+        self.conf_manifest = self.manifest_location_obj.conf_manifest  # manifest configuration file
         self.error = ManifestFileError(self) # self.manifest_location_obj.error
         self.logger = self.manifest_location_obj.logger
         self.manifest_location_error = self.manifest_location_obj.error
+
+        self.alt_conf_manifest = None
+        # check if current file is listed as an exception and has alternative configuration properties
+        exc_files = self.conf_manifest.get_value('Exception_files')  # get Exception_files section, if available
+        if exc_files and isinstance(exc_files, list):
+            # exception section is present, check if the current file is listed as an exception
+            for exc_item in exc_files:
+                if exc_item['name'] == self.file_name:
+                    self.alt_conf_manifest = exc_item  # save alternative configuration setting for the file, if present
+                    break
 
         self.manifest_file_data = None
         self.manifest_columns = {}
@@ -25,17 +37,31 @@ class ManifestFile:
     def process_manifest(self):
         self.logger.info('Start processing manifest file: "{}"'.format(self.manifest_path))
 
-        header_row_num = self.conf_manifest.get_value('File/header_row_num')
+        # set default values
+        header_row_num_alt = None
+        sheet_name_alt = None
+        cfg_manifest_fields_alt = None
+
+        if self.alt_conf_manifest:
+            if 'File' in self.alt_conf_manifest.keys():
+                if 'header_row_num' in self.alt_conf_manifest['File']:
+                    header_row_num_alt = self.alt_conf_manifest['File']['header_row_num']
+                if 'sheet_name' in self.alt_conf_manifest['File']:
+                    sheet_name_alt = self.alt_conf_manifest['File']['sheet_name']
+            if 'Fields' in self.alt_conf_manifest.keys():
+                cfg_manifest_fields_alt = self.alt_conf_manifest['Fields']
+
+        # use alternative header_row_num, if available, otherwise the one from main config section
+        header_row_num = header_row_num_alt if header_row_num_alt \
+            else self.conf_manifest.get_value('File/header_row_num')
 
         if cm.is_excel(self.manifest_path):
-            sheet_name = self.conf_manifest.get_value('File/sheet_name')
+            # use alternative sheet_name, if available, otherwise the one from main config section
+            sheet_name = sheet_name_alt if sheet_name_alt else self.conf_manifest.get_value('File/sheet_name')
             self.manifest_file_data = DataRetrievalExcel(self.manifest_path, self.error, self.logger, sheet_name)
-            # self.manifest_file_data.header_row_num = header_row_num
-            # self.manifest_file_data.replace_blanks_in_header = False
         else:
             self.manifest_file_data = DataRetrievalText(self.manifest_path, self.error, self.logger)
-            # self.manifest_file_data.header_row_num = header_row_num
-            # self.manifest_file_data.replace_blanks_in_header = False
+
         # set file's header related properties
         self.manifest_file_data.header_row_num = header_row_num
         self.manifest_file_data.replace_blanks_in_header = False
@@ -49,8 +75,24 @@ class ManifestFile:
             # loop through manifest fields listed in the config file
             for mf in cfg_manifest_fields:
                 match = False
+                mf_alt = None
+                # check if alternative config values for a field are present
+                if cfg_manifest_fields_alt and isinstance(cfg_manifest_fields_alt, dict):
+                    if mf in cfg_manifest_fields_alt.keys():
+                        mf_alt = cfg_manifest_fields_alt[mf]
+                # combine a "current" config set for a field based on availability of the properties in alt config set
+                cur_cfg_manifest_fields = {
+                    'name': mf_alt['name']
+                    if mf_alt and 'name' in mf_alt.keys()
+                    else cfg_manifest_fields[mf]['name'] if 'name' in cfg_manifest_fields[mf].keys() else None,
+                    'required': mf_alt['required']
+                    if mf_alt and 'required' in mf_alt.keys()
+                    else cfg_manifest_fields[mf]['required'] if 'required' in cfg_manifest_fields[mf].keys() else None
+                }
+                # cur_cfg_manifest_fields = mf_alt if mf_alt else cfg_manifest_fields[mf]
                 # loop through list of possible field names (in the file) listed for the current manifest field
-                for fn in cfg_manifest_fields[mf]['name']:
+                # for fn in cfg_manifest_fields[mf]['name']:
+                for fn in cur_cfg_manifest_fields['name']:
                     cnt = 0
                     match = False
                     # loop through the list of fields in the header and compare to the list
@@ -65,10 +107,10 @@ class ManifestFile:
                         # if a match was found, exist current loop and go to next manifest field
                         break
                 if not match:
-                    if 'required' in cfg_manifest_fields[mf] and cfg_manifest_fields[mf]['required']:
+                    if 'required' in cur_cfg_manifest_fields and cur_cfg_manifest_fields['required']:
                         _str = 'Cannot find a matching field in the manifest file for the required ' \
                                'manifest field "{}"; list of expected field names: {}.'\
-                            .format(mf, cfg_manifest_fields[mf]['name'])
+                            .format(mf, cur_cfg_manifest_fields['name'])
                         self.logger.error(_str)
                         self.error.add_error(_str)
         else:

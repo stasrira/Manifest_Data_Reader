@@ -10,7 +10,7 @@ Fields:
     name: ['Barcode']
     required: True
   sample_id:
-    name: ['SID', 'Barcode']
+    name: ['SIDQQQ', 'BarcodeQQQ']
     required: True
   creation_date:
     name: ['Specimen Date']
@@ -33,7 +33,7 @@ Exception_files:
     name: "20190520 SHIP ECHO DARPA ISSMS_PBMC_SEALFON.xlsx" # name of the file with alternative settings
     File: # alternative File section that will overwrite value of main File section for provided property values
       header_row_num:
-      sheet_name: sheet1
+      # sheet_name: Sheet1A
     Fields: # alternative Fields section that will overwrite value of main Field section for provided property values
       sample_id:
-        name: ['barcodeSTAS']
+        name: ['Barcode']
