@@ -4,8 +4,7 @@ from pathlib import Path
 from utils import ConfigData
 import os
 from file_load import ManifestFile
-from file_load import DataRetrievalText
-from file_load import DataRetrievalExcel
+
 
 class ManifestLocation:
 
@@ -16,7 +15,7 @@ class ManifestLocation:
         self.manifest_local_config_file = manif_location_details['config']
         self.manifest_local_config_path = Path(self.location_path + '/' + self.manifest_local_config_file)
         self.manifest_files = []
-        # self.conf_main = ConfigData(gc.CONFIG_FILE_MAIN)
+        self.conf_manifest = None
 
         self.error = ManifestLocationError(self)
         self.logger = logger
@@ -32,8 +31,6 @@ class ManifestLocation:
             return
 
         self.conf_manifest = ConfigData(self.manifest_local_config_path)
-        # validate loaded config file; it will set "self.disqualified = True", in case of errors
-        self.validate_manifest_config()
 
         pass
 
@@ -63,84 +60,51 @@ class ManifestLocation:
         self.logger.info('Start validation of the config file "{}"'.format(self.manifest_local_config_path))
         str_errors = []
         warnings_produced = False
+        # check if manifest config file is not blank
+        if not self.conf_manifest.cfg:
+            str_errors.append('The manifest file is blank, cannot proceed.')
+        # check if manifest config file has some keys inside
+        if not isinstance(self.conf_manifest.cfg,dict):
+            str_errors.append('The manifest file is not properly formatted, cannot find any key/value pairs.')
+        # get validation rules from the main config file
         mnf_cfg_validation = self.main_cfg.get_value ('Validate/manifest_config_fields')
-        if mnf_cfg_validation:
-            for validate_section in mnf_cfg_validation:
-                sec_name = list(validate_section.keys())[0]
-                # verify that expected sections are present in the config file
-                if not sec_name in self.conf_manifest.cfg.keys():
-                    _str = 'Expected section "{}" was no found in the config file.'.format(sec_name)
-                    str_errors.append(_str)
-                else:
-                    section_items = validate_section[sec_name]
-                    if section_items:
-                        # validate that required fields are present inside of the section of the config file
-                        for item in section_items:
-                            if not item['name'] in self.conf_manifest.cfg[sec_name].keys():
-                                if item['required']:
-                                    _str = 'Required parameter "{}\\{}" was not found in the config file.'\
-                                        .format(sec_name, item['name'])
-                                    str_errors.append(_str)
-                                else:
-                                    _str = 'Expected optional parameter "{}\\{}" was not found in the config file.' \
-                                        .format(sec_name, item['name'])
+        if not str_errors:
+            if mnf_cfg_validation:
+                for validate_section in mnf_cfg_validation:  # loop through sections outlined in the config file
+                    sec_name = list(validate_section.keys())[0]
+                    # verify that expected sections are present in the config file
+                    if not sec_name in self.conf_manifest.cfg.keys():
+                        _str = 'Expected section "{}" was no found in the config file.'.format(sec_name)
+                        str_errors.append(_str)
+                    else:
+                        section_items = validate_section[sec_name]
+                        if section_items:
+                            # validate that required fields are present inside of the section of the config file
+                            for item in section_items:
+                                if not item['name'] in self.conf_manifest.cfg[sec_name].keys():
+                                    if item['required']:
+                                        _str = 'Required parameter "{}\\{}" was not found in the config file.'\
+                                            .format(sec_name, item['name'])
+                                        str_errors.append(_str)
+                                    else:
+                                        _str = 'Expected optional parameter "{}\\{}" was not found in the config file.' \
+                                            .format(sec_name, item['name'])
+                                        self.logger.warning(_str)
+                                        warnings_produced = True
+                            # check for unexpected fields in the manifest config file
+                            for manif_item in self.conf_manifest.cfg[sec_name].keys():
+                                match_found = False
+                                for item in section_items:
+                                    if manif_item == item['name']:
+                                        match_found = True
+                                        break
+                                if not match_found:
+                                    _str = 'Unexpected parameter "{}\\{}" was found in the config file.' \
+                                        .format(sec_name, manif_item)
                                     self.logger.warning(_str)
                                     warnings_produced = True
-                        # check for unexpected fields in the manifest config file
-                        for manif_item in self.conf_manifest.cfg[sec_name].keys():
-                            match_found = False
-                            for item in section_items:
-                                if manif_item == item['name']:
-                                    match_found = True
-                                    break
-                            if not match_found:
-                                _str = 'Unexpected parameter "{}\\{}" was found in the config file.' \
-                                    .format(sec_name, manif_item)
-                                self.logger.warning(_str)
-                                warnings_produced = True
-            if str_errors:
-                self.disqualified = True
-                for err in str_errors:
-                    self.logger.error(err)
-                    self.error.add_error(err)
-                    self.disqualified_reasons.append(err)
-                self.logger.info('Errors reported during validation of the config file "{}"'
-                                 .format(self.manifest_local_config_path))
-            else:
-                if warnings_produced:
-                    self.logger.info(
-                        'Validation (with warnings) passed for the config file "{}"'.format(self.manifest_local_config_path))
-                else:
-                    self.logger.info(
-                        'Successful validation of the config file "{}"'.format(self.manifest_local_config_path))
-
-    # TODO: rewrite the code to make it driven by the Manifest/config_validation section of the main_config file
-    def validate_manifest_config_orig(self):
-        self.logger.info('Start validation of the config file "{}"'.format(self.manifest_local_config_path))
-        str_errors = []
-        if self.conf_manifest.cfg:
-            if not 'Database' in self.conf_manifest.cfg.keys():
-                _str = 'Expected section "Database" was no found in the config file.'
-                str_errors.append(_str)
-            else:
-                if not 'study_id' in self.conf_manifest.cfg['Database'].keys():
-                    _str = 'Expected parameter "Database\\study_id" was no found in the config file.'
-                    str_errors.append(_str)
-            if not 'Fields' in self.conf_manifest.cfg.keys():
-                _str = 'Expected section "Fields" was no found in the config file.'
-                str_errors.append(_str)
-            else:
-                if not 'aliquot_id' in self.conf_manifest.cfg['Fields'].keys():
-                    _str = 'Expected parameter "Fields\\aliquot_id" was no found in the config file.'
-                    str_errors.append(_str)
-                if not 'sample_id' in self.conf_manifest.cfg['Fields'].keys():
-                    _str = 'Expected parameter "Fields\\sample_id" was no found in the config file.'
-                    str_errors.append(_str)
-        else:
-            _str = 'Manifest config file is blank or cannot be read.'
-            str_errors.append(_str)
-
         if str_errors:
+            # if errors are present, disqualify the manifest location
             self.disqualified = True
             for err in str_errors:
                 self.logger.error(err)
@@ -149,5 +113,10 @@ class ManifestLocation:
             self.logger.info('Errors reported during validation of the config file "{}"'
                              .format(self.manifest_local_config_path))
         else:
-            self.logger.info('Successful validation of the config file "{}"'.format(self.manifest_local_config_path))
+            if warnings_produced:
+                self.logger.info(
+                    'Validation (with warnings) passed for the config file "{}"'.format(self.manifest_local_config_path))
+            else:
+                self.logger.info(
+                    'Successful validation of the config file "{}"'.format(self.manifest_local_config_path))
 

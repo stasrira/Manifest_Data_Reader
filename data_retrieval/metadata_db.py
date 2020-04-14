@@ -64,11 +64,12 @@ class MetadataDB:
         self.logger.info('Attempting to execute the following SQL call: {}'.format(str_proc))
         # print ('procedure (str_proc) = {}'.format(str_proc))
 
-        # TODO: if procedure execution does not fail but return back status saying "ERROR:", record an error for the row
         try:
+            # get reference to connection object
             cursor = self.conn.cursor()
+            # execute stored procedure
             cursor.execute(str_proc)
-            # returned recordsets
+            # fetch returned recordsets
             rs_out = []
             rows = cursor.fetchall()
             columns = [column[0] for column in cursor.description]

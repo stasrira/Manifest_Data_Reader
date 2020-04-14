@@ -20,7 +20,6 @@ Manifest:
     folder_name: SampleManifests
     config_file_name: manifest_config.yaml
 
-# TODO: add validation requirements for a manifest config file
 Validate:
     # list of sections and fields that the application will validate in the config file
     # if no definitions for listed fields found, the app will fail the config file validation

@@ -20,6 +20,7 @@ class ManifestFile:
 
         self.manifest_file_data = None
         self.manifest_columns = {}
+        self.submitted_manifest_rows = {}
 
     def process_manifest(self):
         self.logger.info('Start processing manifest file: "{}"'.format(self.manifest_path))
@@ -62,17 +63,17 @@ class ManifestFile:
                     if match:
                         # if a match was found, exist current loop and go to next manifest field
                         break
-                    else:
-                        if 'required' in cfg_manifest_fields[mf] and cfg_manifest_fields[mf]['required']:
-                            _str = 'Cannot find a matching field in the manifest file for the required ' \
-                                   'manifest field "{}"; list of expected field names: {}.'\
-                                .format(mf, cfg_manifest_fields[mf]['name'])
-                            self.logger.error(_str)
-                            self.error.add_error(_str)
+                if not match:
+                    if 'required' in cfg_manifest_fields[mf] and cfg_manifest_fields[mf]['required']:
+                        _str = 'Cannot find a matching field in the manifest file for the required ' \
+                               'manifest field "{}"; list of expected field names: {}.'\
+                            .format(mf, cfg_manifest_fields[mf]['name'])
+                        self.logger.error(_str)
+                        self.error.add_error(_str)
         else:
-            _str = 'Cannot load manifest file {}. Check earlier log entries for errors.'.format(self.manifest_path)
-            self.logger.error(_str)
-            self.error.add_error(_str)
+                _str = 'Cannot load manifest file {}. Check earlier log entries for errors.'.format(self.manifest_path)
+                self.logger.error(_str)
+                self.error.add_error(_str)
 
         manifest_rows = self.prepare_manifest_rows(False)
 
@@ -101,8 +102,12 @@ class ManifestFile:
                                     self.logger.info(_str1)
                                     self.logger.info(_str2)
                                 else:
-                                    self.logger.info(_str1)
-                                    self.logger.info(_str2)
+                                    self.logger.warning(_str1)
+                                    self.logger.warning(_str2)
+                                # save stats of processing a row to a special dictionary;it will be use to produce stats
+                                if not outcome_row['status'] in self.submitted_manifest_rows.keys():
+                                    self.submitted_manifest_rows[outcome_row['status']] = []
+                                self.submitted_manifest_rows[outcome_row['status']].append((row[mdb.alid_name], outcome_row))
                     else:
                         # some errors produced during submitting a row to MDB, abort processing the file
                         self.logger.error(

@@ -8,7 +8,7 @@ from utils import setup_logger_common, deactivate_logger_common, common as cm
 from utils import ConfigData
 from utils import global_const as gc
 from utils import send_email as email
-# from file_load import Inquiry
+from collections import OrderedDict
 from data_retrieval import ManifestLocation
 
 # if executed by itself, do the following
@@ -56,11 +56,11 @@ if __name__ == '__main__':
         manif_dir_name_default = m_cfg.get_value('Manifest/folder_name')
         manif_cfg_file_name_default = m_cfg.get_value('Manifest/config_file_name')
 
-        manifest_locations = {}
+        manifest_locations = OrderedDict()
 
         if locations_list:
             for location in locations_list:
-                print (location)
+                # print (location)
                 manif_dir_name_loc = None
                 manif_cfg_file_name_loc = None
                 # check if Manifest section was provided for a current location
@@ -84,252 +84,160 @@ if __name__ == '__main__':
                         'path': qualif_dir,
                         'config': cfg_file_name
                     }
-
-                print (qualif_dirs)
-            print (manifest_locations)
+                # print (qualif_dirs)
+            #print (manifest_locations)
 
             manifest_loc_objs = []
             for manifest_loc in manifest_locations:
-                mlog.info('Selected for processing manifest directory: "{}"'.format(manifest_loc))
-                manifest_loc_obj = ManifestLocation(manifest_locations[manifest_loc], mlog, m_cfg)
-                manifest_loc_objs.append(manifest_loc_obj)
-                if not manifest_loc_obj.disqualified:
-                    manifest_loc_obj.process_manifests()
-                else:
-                    mlog.info('Current manifest directory was disqualifeid with the following reason: "{}"'
-                              .format(manifest_loc_obj.disqualified_reasons))
-            pass
-        else:
-            # TODO: add aborting logic here
-            mlog.error("No 'Location/sources' were provided in the main config file. Aborting execution.")
-
-
-
-
-
-
-
-        (root, source_inq_dirs, _) = next(walk(inquiries_path))
-
-        # mlog.info('Download inquiries to be processed (count = {}): {}'.format(len(inquiries), inquiries))
-
-        inq_proc_cnt = 0
-        errors_present = 'OK'
-
-        for inq_dir in source_inq_dirs:
-            source_inquiry_path = Path(root) / inq_dir
-            mlog.info('Selected for processing inquiry qualif_dir: "{}", full path: {}'.format(inq_dir, source_inquiry_path))
-
-
-            (_, _, inq_files) = next(walk(source_inquiry_path))
-            inquiries = [fl for fl in inq_files if fl.endswith(('xlsx', 'xls'))]
-            mlog.info('Inquiry files presented (count = {}): "{}"'.format(len(inquiries), inquiries))
-
-            for inq_file in inquiries:
-                inq_path = Path(source_inquiry_path) / inq_file
-
-                # email_msgs = []
-                # email_attchms = []
-
                 try:
-                    # print('--------->Process file {}'.format(inq_path))
-                    mlog.info('The following Inquiry file was selected: "{}".'.format(inq_path))
-
-                    # save timestamp of beginning of the file processing
-                    ts = time.strftime("%Y%m%d_%H%M%S", time.localtime())
-
-                    inq_obj = Inquiry(inq_path)
-
-                    if inq_obj and inq_obj.loaded:
-                        # proceed processing inquiry
-                        mlog.info('Inquiry file was successfully loaded.')
-                        mlog.info('Starting processing Download Inquiry file: "{}".'.format(inq_path))
-
-                        inq_obj.process_inquiry()
-
-                        mlog.info('Processing of Download Inquiry was finished for {}'.format(inq_path))
-
-                        inq_proc_cnt += 1
-
-                    # identify if any errors were identified and set status variable accordingly
-                    if not inq_obj.error.exist():
-                        if not inq_obj.disqualified_items:
-                            # no disqualified sub-aliquots present
-                            fl_status = 'OK'
-                            _str = 'Processing status: "{}". Download Inquiry: {}'.format(fl_status, inq_path)
-                            # errors_present = 'OK'  # this variable is set to OK by default, no update needed
-                        else:
-                            # some disqualified sub-aliquots are presetn
-                            fl_status = 'OK_with_Disqualifications'
-                            _str = 'Processing status: "{}". Download Inquiry: {}'.format(fl_status, inq_path)
-                            if not errors_present == 'ERROR':
-                                errors_present = 'DISQUALIFY'
+                    mlog.info('-->>Selected for processing manifest directory: "{}"'.format(manifest_loc))
+                    manifest_loc_obj = ManifestLocation(manifest_locations[manifest_loc], mlog, m_cfg)
+                    manifest_loc_objs.append(manifest_loc_obj)
+                    # if not disqualified yet, validate the manifest config file
+                    if not manifest_loc_obj.disqualified:
+                        # validate loaded config file; it will set "self.disqualified = True", in case of errors
+                        manifest_loc_obj.validate_manifest_config()
+                    # if not disqualified yet, process manifest
+                    if not manifest_loc_obj.disqualified:
+                        # process manifest files in the current manifest location
+                        manifest_loc_obj.process_manifests()
+                        # log status of processing files in the manifest location
+                        mlog.info('Finish processing of {} manifest(s) in: "{}".'
+                                  .format(len(manifest_loc_obj.manifest_files), manifest_loc))
+                        mlog.info('=> Beginning of the status summary of the processed manifests in "{}"'
+                                  .format(manifest_loc))
+                        for manifest_file in manifest_loc_obj.manifest_files:
+                            if not manifest_file.error.exist():
+                                fl_status = 'OK'
+                                _str = 'Processing status: "{}". Manifest file: {}'\
+                                    .format(fl_status, manifest_file.manifest_path)
+                            else:
+                                fl_status = 'ERROR'
+                                _str = 'Processing status: "{}". Check processing log file for this inquiry: {}' \
+                                    .format(fl_status, manifest_file.logger.handlers[0])
+                                errors_present = 'ERROR'
+                            if fl_status == "OK":
+                                mlog.info(_str)
+                            else:
+                                mlog.warning(_str)
+                        mlog.info('=> End of the status summary of the processed manifests in "{}"'
+                                  .format(manifest_loc))
                     else:
-                        fl_status = 'ERROR'
-                        _str = 'Processing status: "{}". Check processing log file for this inquiry: {}' \
-                            .format(fl_status, inq_obj.logger.handlers[0])
-                        errors_present = 'ERROR'
-
-                    if fl_status == "OK":
-                        mlog.info(_str)
-                    else:
-                        mlog.warning(_str)
-
-                    # deactivate the current Inquiry logger
-                    deactivate_logger_common(inq_obj.logger, inq_obj.log_handler)
-
-                    processed_dir = inq_obj.processed_folder  # 'Processed'
-                    # if Processed folder does not exist in the Inquiry qualif_dir sub-folder, it will be created
-                    os.makedirs(processed_dir, exist_ok=True)
-
-                    inq_processed_name = ts + '_' + fl_status + '_' + str(inq_file).replace(' ', '_').replace('__','_')
-                    # print('New file name: {}'.format(ts + '_' + fl_status + '_' + fl))
-                    # move processed files to Processed folder
-                    os.rename(inq_path, processed_dir / inq_processed_name)
-                    mlog.info('Processed Download Inquiry "{}" was moved and renamed as: "{}"'
-                              .format(inq_path, processed_dir / inq_processed_name))
-
-                    # preps for email notification
-
-                    # TODO: move this step to a separate function
-                    nbsp = 3
-                    email_msgs.append(
-                        ('Inquiry file (#{}): <br/>{} <br/> was processed and moved/renamed to: <br/> {}.'
-                         '<br/> <b>Errors summary:</b><br/>{}'
-                         '<br/> <i>Log file location: <br/>{}</i>'
-                         '<br/> Created Download Request file locatoin:<br/>{}'
-                         '<br/> <b>Data qualif_dirs used for this inquiry:</b><br/>{}'
-                         '<br/> <font color="green"><b>Processed Aliquots:</b></font><br/>{}'
-                         '<br/> <b>Disqualified Aliquots</b> (if present, see the log file for more details):<br/>{}'
-                         '<br/> A inquiry file for re-processing Disqualified Aliquots was saved in:<br/>{}'
-                         ''.format(inq_proc_cnt,
-                                    '&nbsp;'*nbsp + str(inq_path),
-                                   '&nbsp;'*nbsp + str(processed_dir / inq_processed_name),
-                                   '<font color="red">Check details for {} Error(s) in the log file </font>'
-                                   .format(inq_obj.error.count)
-                                                            if inq_obj.error.exist()
-                                                            else '<font color="green">No Errors</font> ',
-                                   '&nbsp;'*nbsp + inq_obj.log_handler.baseFilename,
-                                   '&nbsp;'*nbsp + str(inq_obj.download_request_path),
-                                   '<br>'.join(['&nbsp;'*nbsp + 'Status: {}'
-                                               .format(('<font color="red">Disqualified</font> - {}<br>>{}'
-                                                    .format(ds['path'],
-                                                        '<br>'.join(inq_obj.data_sources.disqualified_data_sources[ds['path']]))
-                                                            if ds['path'] in
-                                                               inq_obj.data_sources.disqualified_data_sources.keys()
-                                                            else '<font color="green">OK</font> - {}'
-                                                                .format(ds['path'])))
-                                                for ds in inq_obj.data_sources.source_locations
-                                                ])
-                                                if inq_obj.data_sources.source_locations else 'None',
-                                   '<br>'.join(['{}{} ({})'.format('&nbsp;'*nbsp, item['sub-aliquot'], item['study']) +
-                                        (' - {}{} match ->{}'
-                                            .format(
-                                                '<b> warning - ' if item['match_details']['match_type'] != 'exact'
-                                                    else '<font color="green">',
-                                                item['match_details']['match_type'],
-                                                '</b> ' if item['match_details']['match_type'] != 'exact'
-                                                    else '</font> '
-                                                )
-                                        )
-                                                + '{} ({})'.format(item['qualif_dir']['name'], item['qualif_dir']['path'])
-                                        for item in inq_obj.inq_match_arr
-                                                ])
-                                                            if inq_obj.inq_match_arr else 'None',
-                                   '<br>'.join(['&nbsp;'*nbsp + val +
-                                        ' - <font color="red">status: {}</font> Here is the inquiry entry for it: {}'
-                                        .format(inq_obj.disqualified_items[val]['status'],
-                                                inq_obj.disqualified_items[val]['inquiry_item'])
-                                        for val in inq_obj.disqualified_items.keys()])
-                                                        if inq_obj.disqualified_items else 'None',
-                                   '&nbsp;'*nbsp + str(inq_obj.disqualified_inquiry_path)
-                                                            if inq_obj.disqualified_items else 'N/A'
-                                   )
-                         )
-                         
-                    )
-
-                    # email_attchms.append(inq_obj.log_handler.baseFilename)
-
-                    # print ('email_msgs = {}'.format(email_msgs))
-
-                    inq_obj = None
-
+                        mlog.info('=> Current manifest directory was disqualified with the following reason: "{}"'
+                                  .format(manifest_loc_obj.disqualified_reasons))
                 except Exception as ex:
-                    # report an error to log file and proceed to next file.
-                    mlog.error('Error "{}" occurred during processing file: {}\n{} '
-                               .format(ex, inq_path, traceback.format_exc()))
-                    raise
+                    # report unexpected error during processing manifest location
+                    _str = 'Unexpected Error "{}" occurred during processing manifest location "{}" \n{} ' \
+                        .format(ex, manifest_loc, traceback.format_exc())
+                    mlog.critical(_str)
+                    manifest_loc_obj.disqualified = True
+                    manifest_loc_obj.disqualified_reasons.append(_str)
+        else:
+            mlog.error("No 'Location/sources' were provided in the main config file.")
 
-        mlog.info('Number of successfully processed Inquiries = {}'.format(inq_proc_cnt))
+        # prepare email messages for each proceed location
+        email_msgs = cm.prepare_status_email(manifest_loc_objs)
 
-        # start Data Download request if proper config setting was provided
-        dd_status = {'status': '', 'message': ''}
-        if run_data_download:
-            # start process
-            mlog.info('Starting asyncroniously Data Downloader app: "{}".'.format(gc.DATA_DOWNLOADER_PATH))
-            try:
-                dd_process = cm.start_external_process_async(gc.DATA_DOWNLOADER_PATH)
-                # check if it is running
-                dd_status = cm.check_external_process(dd_process)
-                mlog.info('Status of running Data Downloader app: "{}".'.format(dd_status))
-            except Exception as ex:
-                # report unexpected error during starting Data Downloader
-                _str = 'Unexpected Error "{}" occurred during an attempt to start Data Downloader app ({})\n{} ' \
-                    .format(ex, gc.DATA_DOWNLOADER_PATH, traceback.format_exc())
-                mlog.critical(_str)
-                dd_status = {'status': 'Error', 'message': _str}
+        # collect stats for errors and disqualifications across all manfiest locations and files
+        mnf_errors_cnt = 0
+        mnf_disqual_cnt = 0
+        fls_errors_cnt = 0
+        fls_processed_cnt = 0
+        if len(manifest_loc_objs) > 0:
+            for m_obj in manifest_loc_objs:
+                if m_obj.error:
+                    # count errors towared total count of manifest errors
+                    mnf_errors_cnt += m_obj.error.count
+                if m_obj.disqualified and m_obj.disqualified_reasons:
+                    # count disqualifications towared total count of manifest disqualifications
+                    mnf_disqual_cnt += len(m_obj.disqualified_reasons)
 
+                # add processed manifest files toward total count of files
+                fls_processed_cnt += len(m_obj.manifest_files)
+                # check for errors during processing manifest files
+                for file in m_obj.manifest_files:
+                    if file.error:
+                        # count errors towared total count of manifest errors
+                        fls_errors_cnt += file.error.count
+
+        # collect final details and send notification email
         mlog.info('Preparing to send notificatoin email.')
 
         email_to = m_cfg.get_value('Email/send_to_emails')
-        email_subject = 'processing of download inquiry. '
+        email_subject = 'processing of manifest files. '
 
-        if inq_proc_cnt > 0:
-            # collect final details and send email about this study results
-            # email_subject = 'processing of Download Iquiries for "{}"'.format(gc.PROJECT_NAME)
-            if errors_present == 'OK':
-                email_subject = 'SUCCESSFUL ' + email_subject
-            elif errors_present == 'DISQUALIFY':
-                email_subject = 'SUCCESSFUL (with disqualifications) ' + email_subject
+        if mnf_errors_cnt + mnf_disqual_cnt + fls_errors_cnt == 0:
+            if len(manifest_loc_objs) > 0:
+                # no errors or disqualifications were reported
+                email_subject = 'SUCCESSFUL processing of manifest files.'
             else:
-                email_subject = 'ERROR(s) present during ' + email_subject
+                # no manifests were processed
+                email_subject = 'No manifest files were processed.'
+        else:
+            if mnf_disqual_cnt > 0:
+                if mnf_errors_cnt + fls_errors_cnt > 0:
+                    email_subject = 'ERROR(s) and DISQUALIFICATION(s) are present during processing of manifest files.'
+                else:
+                    email_subject = 'DISQUALIFICATION(s) are present during processing of manifest files.'
+            else:
+                email_subject = 'ERROR(s) are present during processing of manifest files.'
 
-            if dd_status and 'status' in dd_status.keys() and dd_status['status'].lower() == 'error':
-                email_subject = email_subject + 'Errors starting Data Downloader.'
+        # prepare stats of processed vs not processed locations for the status email
+        identified_loc = len(manifest_locations)  # number of identified locations
+        processed_loc = len(manifest_loc_objs)  # number of identified locations
+        not_processed_loc = []  # array to keep not processed locations
+        if manifest_locations and manifest_loc_objs:
+            # if not all locations were processed, collect them into not_processed_loc list
+            if identified_loc > processed_loc:
+                for l in manifest_locations:
+                    l_match = False
+                    for lo in manifest_loc_objs:
+                        if l == lo.location_path:
+                            l_match = True
+                            break
+                    if not l_match:
+                        not_processed_loc.append(l)
 
-            email_body = ('Number of inquiries processed: {}.'.format(inq_proc_cnt)
-                          + '<br/>Run Data Downloader setting was set to "{}"'.format(run_data_download)
-                          + ('<br/>Data Downloader location: {}'.format(gc.DATA_DOWNLOADER_PATH) if run_data_download else '')
-                            # TODO: change color of the status in the next line depending on the value
-                          + ('<br/>Status of starting Data Downloader: {}'.format(dd_status['status']) if run_data_download else '')
-                          + '<br/><br/>Processed Inquiry\'s details:'
-                          + '<br/><br/>'
-                          + '<br/><br/>'.join(email_msgs)
-                          )
+        email_body = ('Total of identified manifest locations: <b>{}</b>'.format(identified_loc)
+                      + '<br/>Total of processed manifest locations: <font color = "green"><b>{}</b></font>'
+                        .format(processed_loc)
+                      + '<br/>Log file for the run: {}'.format(str(mlog.handlers[0].baseFilename))
+                      + (
+                          '<br/><br/><font color="red">Total of not processed locations: <b>{}</b>'
+                              .format(identified_loc - processed_loc)
+                          + '<br/>Location(s) details:<br/>'
+                          + '<br/>'.join(not_processed_loc)
+                          + '</font>'
+                          if identified_loc > processed_loc else '')
+                      + '<br/><br/>Number of processed manifest files (across all locations): <b>{}</b>'
+                        .format(fls_processed_cnt)
+                      + '<br/><br/>Processed Manifest\'s details:'
+                      + '<br/><br/>'
+                      + '<br/><br/>'.join(email_msgs)
+                      )
 
-            # print ('email_subject = {}'.format(email_subject))
-            # print('email_body = {}'.format(email_body))
+        # print ('email_subject = {}'.format(email_subject))
+        # print('email_body = {}'.format(email_body))
 
-            mlog.info('Sending a status email with subject "{}" to "{}".'.format(email_subject, email_to))
+        mlog.info('Sending a status email with subject "{}" to "{}".'.format(email_subject, email_to))
 
-            try:
-                if m_cfg.get_value('Email/send_emails'):
-                    email.send_yagmail(
-                        emails_to= email_to,
-                        subject=email_subject,
-                        message=email_body
-                        # commented adding attachements, since some log files go over 25GB limit and fail email sending
-                        # ,attachment_path=email_attchms
-                    )
-            except Exception as ex:
-                # report unexpected error during sending emails to a log file and continue
-                _str = 'Unexpected Error "{}" occurred during an attempt to send email upon ' \
-                       'finishing processing "{}" study: {}\n{} ' \
-                    .format(ex, inq_path, os.path.abspath(__file__), traceback.format_exc())
-                mlog.critical(_str)
+        try:
+            if m_cfg.get_value('Email/send_emails'):
+                email.send_yagmail(
+                    emails_to= email_to,
+                    subject=email_subject,
+                    message=email_body
+                    # commented adding attachements, since some log files go over 25GB limit and fail email sending
+                    # ,attachment_path=email_attchms
+                )
+        except Exception as ex:
+            # report unexpected error during sending emails to a log file and continue
+            _str = 'Unexpected Error "{}" occurred during an attempt to send final email upon ' \
+                   'finishing processing of manifests:\n{} ' \
+                .format(ex, traceback.format_exc())
+            mlog.critical(_str)
 
-            mlog.info('End of processing of download inquiries in "{}".'.format(inquiries_path))
+        mlog.info('End of processing of manifests.')
 
     except Exception as ex:
         # report unexpected error to log file

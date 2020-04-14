@@ -85,7 +85,6 @@ def get_file_system_items_old(dir_cur, search_deep_level, exclude_dirs=None, ite
         deep_cnt += 1
     return items
 
-
 def get_file_system_items_global(dir_cur, item_type='dir', match_pattern=None):
     import glob
     import os
@@ -108,3 +107,66 @@ def get_file_system_items_global(dir_cur, item_type='dir', match_pattern=None):
     items.extend(items_clean)
 
     return items
+
+def prepare_status_email(manifest_locations):
+    msg_out = []
+    nbsp = 3
+    mnf_loc_cnt = 0
+    for mnf_loc in manifest_locations:
+        email_msg = ''
+        mnf_loc_cnt += 1
+        email_msg = '<b>Manifest location (#{}):</b><br/>{}'\
+            .format(mnf_loc_cnt, '&nbsp;' * nbsp + str(mnf_loc.location_path))
+        email_msg = email_msg + '<br/>{}Disqualified:{} {}{}</font>'.\
+            format(
+            '<b>' if mnf_loc.disqualified else '',
+            '</b>' if mnf_loc.disqualified else '',
+            '<font color = "red">' if mnf_loc.disqualified else '<font color = "green">',
+            mnf_loc.disqualified)
+        if mnf_loc.disqualified and mnf_loc.disqualified_reasons:
+            email_msg = email_msg + '<br/><font color = "red">Disqualification Reasons:</font>'
+            for ds_reason in mnf_loc.disqualified_reasons:
+                email_msg = email_msg + '<br/>{}'.format('&nbsp;' * nbsp + str(ds_reason))
+
+        if not mnf_loc.disqualified and mnf_loc.manifest_files:
+            email_msg = email_msg + '<br/>Number of processed manifests: {}.'.format(len(mnf_loc.manifest_files))
+            email_msg = email_msg + '<br/>Manifest files:'
+            file_cnt = 0
+            for mnf_file in mnf_loc.manifest_files:
+                file_cnt += 1
+                email_msg = email_msg + '<br/>{}- <i><b>File (#{}):</b> {}</i>'.format(
+                    '&nbsp;' * nbsp, file_cnt, str(mnf_file.manifest_path))
+                email_msg = email_msg + '<br/>{}Processed: {}{}</font>'\
+                    .format('&nbsp;' * nbsp,
+                            '<font color="green">' if mnf_file.processed else '<font color="red">',
+                            str(mnf_file.processed))
+                if mnf_file.submitted_manifest_rows:
+                    email_msg = email_msg + '<br/>{}Processed rows summary:'.format('&nbsp;' * nbsp)
+                for row_status in mnf_file.submitted_manifest_rows:
+                    email_msg = email_msg + '<br/>{}- Status: <font color = "{}">{}</font>: {} rows '\
+                        .format('&nbsp;' * nbsp,
+                                'green' if row_status == 'OK' else 'red',
+                                row_status,
+                                len(mnf_file.submitted_manifest_rows[row_status]))
+                    if not row_status == 'OK':
+                        email_msg = email_msg + '<br/>{}Details:'.format('&nbsp;' * nbsp)
+                        for item in mnf_file.submitted_manifest_rows[row_status]:
+                            email_msg = email_msg + '<br/>{}{} --> {}'\
+                                .format('&nbsp;' * nbsp, str(item[0]), str(item[1]['description']))
+                            # print(str(item[0]))
+                            # print(str(item[1]['description']))
+                            # .format(['<br/>' + str(item[0]) + ' --> ' + str(item[1]) for item in mnf_file.submitted_manifest_rows[row_status]])
+                    # print(row_status)
+                    # print(mnf_file.submitted_manifest_rows[row_status])
+                if mnf_file.error.exist():
+                    # email_msg = email_msg + '<br/>{}<font color = "red">Errors reported:</font> </br>{}'.format('&nbsp;' * nbsp, str(mnf_file.error.get_errors_to_str()['errors']))
+                    email_msg = email_msg + '<br/>{}<font color = "red">Errors reported:</font>'.format('&nbsp;' * nbsp)
+                    for err in mnf_file.error.get_errors_to_str()['errors']:
+                        email_msg = email_msg + '<br/>{}->{}'.format('&nbsp;' * nbsp, err)
+        else:
+            email_msg = email_msg + '<br/><font color="red">No manifest files processed in this location.</font>'
+
+        msg_out.append((email_msg))
+
+    return msg_out
+

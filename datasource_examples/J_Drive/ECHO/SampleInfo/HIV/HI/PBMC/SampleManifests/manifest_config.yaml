@@ -36,4 +36,4 @@ Exception_files:
       sheet_name: sheet1
     Fields: # alternative Fields section that will overwrite value of main Field section for provided property values
       sample_id:
-        name: ['barcode1']
+        name: ['barcodeSTAS']
