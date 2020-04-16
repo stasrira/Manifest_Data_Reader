@@ -3,17 +3,17 @@ Database:
 
 File:
   header_row_num: 1
-  sheet_name: Sheet1
+  sheet_name: # Sheet1
 
 Fields:
   aliquot_id:
-    name: ['Barcode']
+    name: ['Barcode (aliquotID)']
     required: True
   sample_id:
-    name: ['SIDQQQ', 'BarcodeQQQ']
+    name: ['SID (biospecimenID)']
     required: True
   creation_date:
-    name: ['Specimen Date']
+    name: ['Ship date']
   volume:
     name: ['Sample volume (mL)']
   num_cells:

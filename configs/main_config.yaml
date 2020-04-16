@@ -16,6 +16,10 @@ Location:
     # path to the folder where application level log files are located (one per application run)
     app_logs: D:\MounSinai\Darpa\Programming\Manifest_Data_Reader\logs
 
+    ignore_files:
+        - ".DS_Store"
+        # - "study.cfg.yaml"
+
 Manifest:
     folder_name: SampleManifests
     config_file_name: manifest_config.yaml
