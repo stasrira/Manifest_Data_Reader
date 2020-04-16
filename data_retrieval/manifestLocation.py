@@ -37,12 +37,17 @@ class ManifestLocation:
     def process_manifests(self):
         (root, _, manifest_files) = next(os.walk(self.location_path))
 
+        ignore_files = self.main_cfg.get_value('Location/ignore_files')  # global list of files to be always ignored
+
         for manifest_file in manifest_files:
             if manifest_file == self.manifest_local_config_file:
                 # ignore local config file
                 continue
             if manifest_file.startswith('~$'):
                 # ignore temporary excel files (present when a file is open for reading)
+                continue
+            if manifest_file in ignore_files:
+                # ignore any files in the global ignore list
                 continue
             self.logger.info('Manifest file selected for processing: "{}"'.format(manifest_file))
             manifest_file_obj = ManifestFile(Path(root + '/' + manifest_file), self)

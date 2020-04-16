@@ -4,17 +4,13 @@ Location:
     # list of qualif_dirs to be searched for sample manifest files
     sources:
         -
-            path: D:\MounSinai\Darpa\Programming\Manifest_Data_Reader\datasource_examples\J_Drive\ECHO\SampleInfo\HIV
-        -
-            path: D:\MounSinai\Darpa\Programming\Manifest_Data_Reader\datasource_examples\J_Drive\ECHO\SampleInfo\HLTH
-            Manifest:
-                folder_name: SampleManifests1
-                config_file_name: manifest_config1.yaml
-        -
-            path: D:\MounSinai\Darpa\Programming\Manifest_Data_Reader\datasource_examples\J_Drive\ECHO
+            path: /mnt/researchsan02a/Projects/ECHO/SampleInfo
 
     # path to the folder where application level log files are located (one per application run)
-    app_logs: D:\MounSinai\Darpa\Programming\Manifest_Data_Reader\logs
+    app_logs: logs
+    
+    ignore_files:
+        - ".DS_Store"
 
 Manifest:
     folder_name: SampleManifests
@@ -40,7 +36,6 @@ Validate:
 
 Logging:
     #main log - log created by the main application
-    #inquiry log - log created for each processed inquiry
 
     #defines log levels to be used for "main" and "file" logs. Usual values are INFO and DEBUG
     main_log_level: INFO
@@ -59,7 +54,7 @@ Database:
         #dev conn string: Driver={SQL Server};Server=localhost\sqlexpress;Database=dw_motrpac;User=mt_internal_user;Password=se@lf0n1nt3rn@lc
         #prod conn string: Driver={ODBC Driver 17 for SQL Server};Server=10.160.20.65\SSQL_2016;Database=dw_motrpac;UID=mt_internal_user;PWD=se@lf0n1nt3rn@lc
         #    #DB connection string
-        mdb_conn_str: Driver={ODBC Driver 17 for SQL Server};Server=localhost\sqlexpress;Database=dw_motrpac;UID=mt_internal_user;PWD=se@lf0n1nt3rn@l # Driver={SQL Server};Server=localhost\sqlexpress;Database=dw_motrpac;User=mt_internal_user;Password=se@lf0n1nt3rn@lc
+        mdb_conn_str: DRIVER={ODBC Driver 17 for SQL Server};SERVER=10.160.20.65,51261;DATABASE=dw_motrpac;UID=mt_internal_user;PWD=se@lf0n1nt3rn@l
 
     procedure:
         # name of the stored proc to be used to load samples to DB
