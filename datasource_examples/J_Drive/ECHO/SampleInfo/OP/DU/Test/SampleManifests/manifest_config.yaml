@@ -1,0 +1,39 @@
+Database:
+  study_id: 11 # study id (from dw_studies table in DB) corresponding to the current manifest provider
+
+File:
+  header_row_num: 1
+  sheet_name: # Sheet1
+
+Fields:
+  aliquot_id:
+    name: ['aliquot_id']
+    required: True
+  sample_id:
+    name: ['biosample_id']
+    required: True
+  creation_date:
+    name: ['creation_date']
+  volume:
+    name: ['volume']
+  num_cells:
+    name: ['num_cells']
+  species:
+    name: 
+  tissue:
+    name: 
+  specimen_prep:
+    name: 
+  ship_date:
+    name: 
+
+# TODO: implement logic for exception files that would not follow the main setting set above
+Exception_files:
+  -
+    name:  # name of the file with alternative settings
+    File: # alternative File section that will overwrite value of main File section for provided property values
+      header_row_num:
+      # sheet_name: Sheet1A
+    Fields: # alternative Fields section that will overwrite value of main Field section for provided property values
+      sample_id:
+        name: 

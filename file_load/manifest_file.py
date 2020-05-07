@@ -92,20 +92,21 @@ class ManifestFile:
                 # cur_cfg_manifest_fields = mf_alt if mf_alt else cfg_manifest_fields[mf]
                 # loop through list of possible field names (in the file) listed for the current manifest field
                 # for fn in cfg_manifest_fields[mf]['name']:
-                for fn in cur_cfg_manifest_fields['name']:
-                    cnt = 0
-                    match = False
-                    # loop through the list of fields in the header and compare to the list
-                    for hdr in headers:
-                        if hdr.strip() == fn.strip():
-                            # assign column of values from the file for the matching manifest field
-                            self.manifest_columns[mf.strip()] = self.manifest_file_data.get_column_values(cnt)
-                            match = True
+                if cur_cfg_manifest_fields['name']:
+                    for fn in cur_cfg_manifest_fields['name']:
+                        cnt = 0
+                        match = False
+                        # loop through the list of fields in the header and compare to the list
+                        for hdr in headers:
+                            if hdr.strip() == fn.strip():
+                                # assign column of values from the file for the matching manifest field
+                                self.manifest_columns[mf.strip()] = self.manifest_file_data.get_column_values(cnt)
+                                match = True
+                                break
+                            cnt += 1
+                        if match:
+                            # if a match was found, exist current loop and go to next manifest field
                             break
-                        cnt += 1
-                    if match:
-                        # if a match was found, exist current loop and go to next manifest field
-                        break
                 if not match:
                     if 'required' in cur_cfg_manifest_fields and cur_cfg_manifest_fields['required']:
                         _str = 'Cannot find a matching field in the manifest file for the required ' \
