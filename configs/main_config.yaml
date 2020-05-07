@@ -4,7 +4,7 @@ Location:
     # list of qualif_dirs to be searched for sample manifest files
     sources:
         -
-            path: /mnt/researchsan02a/Projects/ECHO/SampleInfo
+            path: /mnt/researchsan02a/Sample_Manifests/ECHO # /mnt/researchsan02a/Projects/ECHO/SampleInfo
 
     # path to the folder where application level log files are located (one per application run)
     app_logs: logs
@@ -13,7 +13,7 @@ Location:
         - ".DS_Store"
 
 Manifest:
-    folder_name: SampleManifests
+    folder_name: ManifestsToProcess # SampleManifests
     config_file_name: manifest_config.yaml
 
 Validate:
