@@ -22,7 +22,15 @@ class File:
     loaded = None
     logger = None
 
-    def __init__(self, filepath, file_type=1, file_delim=',', replace_blanks_in_header=True):
+    def __init__(self, filepath, file_type=None, file_delim=None, replace_blanks_in_header=None):
+        # setup default parameters
+        if not file_type:
+            file_type = 2
+        if not file_delim:
+            file_delim = ','
+        if not replace_blanks_in_header:
+            replace_blanks_in_header = True
+
         self.filepath = filepath
         self.wrkdir = os.path.dirname(os.path.abspath(filepath))
         self.filename = Path(os.path.abspath(filepath)).name
@@ -115,7 +123,11 @@ class File:
             row_with_header[title] = field
         return row_with_header
 
-    def rows_count(self, exclude_header=False):
+    def rows_count(self, exclude_header=None):
+        # setup default parameters
+        if not exclude_header:
+            exclude_header = True
+
         num = len(self.get_file_content())
         if exclude_header:
             num = num - 1

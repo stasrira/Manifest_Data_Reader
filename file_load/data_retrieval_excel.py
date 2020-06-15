@@ -5,7 +5,12 @@ from utils import common as cm
 
 class DataRetrievalExcel(File):
 
-    def __init__(self, filepath, req_error, req_logger, sheet_name='', file_type=2):
+    def __init__(self, filepath, req_error, req_logger, sheet_name=None, file_type=None):
+        # setup default parameters
+        if not sheet_name:
+            sheet_name = ''
+        if not file_type:
+            file_type = 2
 
         # rec_error parameter is a pointer to the current request error object
 
@@ -17,7 +22,13 @@ class DataRetrievalExcel(File):
 
         # self.get_file_content()
 
-    def get_column_values(self, col_number, header_row_number=0, exclude_header=True):
+    def get_column_values(self, col_number, header_row_number=None, exclude_header=None):
+        # setup default parameters
+        if not header_row_number:
+            header_row_number = 0
+        if not exclude_header:
+            exclude_header = True
+
         col_values = []
         # adjust passed numbers to the 0-based numbering
         # col_number = col_number - 1
