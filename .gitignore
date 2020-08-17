@@ -115,3 +115,4 @@ venv.bak/
 /inquiries/BobyLab/logs
 *processed/
 *reprocess/
+datasource_examples/
