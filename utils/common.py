@@ -1,4 +1,6 @@
+import os
 from pathlib import Path
+from utils import global_const as gc
 
 
 def get_project_root():
@@ -113,6 +115,42 @@ def get_file_system_items_global(dir_cur, item_type='dir', match_pattern=None):
 
     return items
 
+def move_file_to_processed(file_path, processed_dir_path, log_obj, error_obj):
+    if not os.path.exists(processed_dir_path):
+        # if Processed folder does not exist in the current study folder, create it
+        log_obj.info('Creating directory for processed files "{}"'.format(processed_dir_path))
+        os.mkdir(processed_dir_path)
+
+    file_name = Path(file_path).name
+    file_name_new = file_name
+    file_name_new_path = Path(processed_dir_path) / file_name_new
+    cnt = 0
+    #check if file with the same name was already saved in "processed" dir
+    while os.path.exists(file_name_new_path):
+        # if file exists, identify a new name, so the new file won't overwrite the existing one
+        if cnt >= gc.PROCESSED_FOLDER_MAX_FILE_COPIES:
+            file_name_new_path = None
+            break
+        cnt += 1
+        file_name_new = '{}({}){}'.format(os.path.splitext(file_name)[0], cnt, os.path.splitext(file_name)[1])
+        file_name_new_path = Path(processed_dir_path) / file_name_new
+
+    if not file_name_new_path is None:
+        # new file name was successfully identified
+        # move the file to the processed dir under the identified new name
+        os.rename(file_path, file_name_new_path)
+        log_obj.info('Processed file "{}" was moved to "{}" under {} name: "{}".'
+                     .format(str(file_path), str(processed_dir_path)
+                          ,('the same' if cnt == 0 else 'the new')
+                          ,file_name_new_path))
+    else:
+        # new file name was not identified
+        _str = 'Processed file "{}" cannot be moved to "{}" because {} copies of this file already exist in this ' \
+               'folder that exceeds the allowed application limit of copies for the same file.'\
+            .format(file_path, processed_dir_path, cnt + 1)
+        log_obj.error (_str)
+        error_obj.add_error(_str)
+        pass
 
 def prepare_status_email(manifest_locations):
     msg_out = []
@@ -168,7 +206,7 @@ def prepare_status_email(manifest_locations):
                     for err in mnf_file.error.get_errors_to_str()['errors']:
                         email_msg = email_msg + '<br/>{}->{}'.format('&nbsp;' * nbsp, err)
         else:
-            email_msg = email_msg + '<br/><font color="red">No manifest files processed in this location.</font>'
+            email_msg = email_msg + '<br/><font color="blue">No manifest files processed in this location.</font>'
 
         msg_out.append(email_msg)
 
