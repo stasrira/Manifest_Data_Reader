@@ -114,7 +114,7 @@ if __name__ == '__main__':
                                     .format(fl_status, manifest_file.manifest_path)
                             else:
                                 fl_status = 'ERROR'
-                                _str = 'Processing status: "{}". Check processing log file for this inquiry: {}' \
+                                _str = 'Processing status: "{}". Check processing log file for this manifest: {}' \
                                     .format(fl_status, manifest_file.logger.handlers[0])
                                 errors_present = 'ERROR'
                             if fl_status == "OK":

@@ -10,17 +10,6 @@ from collections import OrderedDict
 
 #  Text file class (used as a base)
 class File:
-    filepath = None
-    wrkdir = None
-    filename = None
-    file_type = None  # 1:text, 2:excel
-    file_delim = None  # ','
-    lineList = None  # []
-    __headers = None  # []
-    error = None  # FileErrors class reference holding all errors associated with the current file
-    sample_id_field_names = None  # []
-    loaded = None
-    logger = None
 
     def __init__(self, filepath, file_type=None, file_delim=None, replace_blanks_in_header=None):
         # setup default parameters
@@ -34,7 +23,7 @@ class File:
         self.filepath = filepath
         self.wrkdir = os.path.dirname(os.path.abspath(filepath))
         self.filename = Path(os.path.abspath(filepath)).name
-        self.file_type = file_type
+        self.file_type = file_type # 1:text, 2:excel
         self.file_delim = file_delim
         self.error = FileError(self)
         self.lineList = []
@@ -44,6 +33,7 @@ class File:
         self.sample_id_field_names = []
         self.replace_blanks_in_header = replace_blanks_in_header
         self.loaded = False
+        self.logger = None
 
     @property
     def headers(self):
