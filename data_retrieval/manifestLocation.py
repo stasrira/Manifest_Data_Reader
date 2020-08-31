@@ -1,5 +1,5 @@
 from app_error import ManifestLocationError
-from utils import common as cm
+from utils import common as cm, global_const as gc
 from pathlib import Path
 from utils import ConfigData
 import os
@@ -55,6 +55,12 @@ class ManifestLocation:
             manifest_file_obj.process_manifest()
             if manifest_file_obj.processed:
                 self.logger.info('Manifest file was processed successfully; file: "{}"'.format(manifest_file))
+
+                # move processed file to "processed" folder
+                cm.move_file_to_processed(manifest_file_obj.manifest_path,
+                                          Path(root) / gc.PROCESSED_FOLDER_NAME,
+                                          manifest_file_obj.logger, manifest_file_obj.error)
+
             else:
                 self.logger.warning(
                     'Manifest file was not processed (file: "{}"). See errors reported earlier in the log'

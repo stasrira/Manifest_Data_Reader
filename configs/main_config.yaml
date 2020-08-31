@@ -12,6 +12,11 @@ Location:
                 config_file_name: manifest_config1.yaml
         -
             path: D:\MounSinai\Darpa\Programming\Manifest_Data_Reader\datasource_examples\J_Drive\ECHO
+        -
+            path: D:\MounSinai\Darpa\Programming\Manifest_Data_Reader\datasource_examples\J_Drive\Sample_Manifests
+            Manifest:
+                folder_name: ManifestsToProcess
+                config_file_name: manifest_config.yaml
 
     # path to the folder where application level log files are located (one per application run)
     app_logs: D:\MounSinai\Darpa\Programming\Manifest_Data_Reader\logs

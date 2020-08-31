@@ -4,7 +4,10 @@ from utils import common as cm
 
 class DataRetrievalText(File):
 
-    def __init__(self, filepath, req_error, req_logger, file_type=1):
+    def __init__(self, filepath, req_error, req_logger, file_type=None):
+        # setup default parameters
+        if not file_type:
+            file_type = 1
 
         # req_error parameter is a pointer to the current request error object
         delim = cm.identify_delimeter_by_file_extension(filepath)
@@ -13,7 +16,13 @@ class DataRetrievalText(File):
         self.logger = req_logger
         self.sheet_name = ''
 
-    def get_column_values(self, col_number, header_row_number=0, exclude_header=True):
+    def get_column_values(self, col_number, header_row_number=None, exclude_header=None):
+        # setup default parameters
+        if not header_row_number:
+            header_row_number = 0
+        if not exclude_header:
+            exclude_header = True
+
         col_values = []
         # read content of the file
         self.get_file_content()

@@ -110,8 +110,5 @@ venv.bak/
 /.idea
 
 #processed folders
-/outcome_requests
-/inquiries/Minerva_ATACseq/logs
-/inquiries/BobyLab/logs
 *processed/
 *reprocess/
