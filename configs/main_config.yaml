@@ -5,6 +5,8 @@ Location:
     sources:
         -
             path: /mnt/researchsan02a/Sample_Manifests/ECHO # /mnt/researchsan02a/Projects/ECHO/SampleInfo
+        -
+            path: /mnt/researchsan02a/Sample_Manifests/Peerless
 
     # path to the folder where application level log files are located (one per application run)
     app_logs: logs
